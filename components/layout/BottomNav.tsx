@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Repeat2, CreditCard, Banknote, Menu } from "lucide-react";
+import { Repeat2, CreditCard, Banknote, Menu, PersonStanding, Users2, LockIcon } from "lucide-react";
 
 export default function BottomNav() {
   return (
@@ -27,7 +27,7 @@ export default function BottomNav() {
           href="/sell-usdt"
           className="flex flex-col items-center justify-center gap-1 text-xs font-medium text-zinc-300"
         >
-          <Banknote size={22} />
+          <LockIcon size={22} />
           <span>Staking</span>
         </Link>
 
@@ -35,7 +35,7 @@ export default function BottomNav() {
           href="/referral"
           className="flex flex-col items-center justify-center gap-1 text-xs font-medium text-zinc-300"
         >
-          <Menu size={22} />
+          <Users2 size={22} />
           <span>Referral</span>
         </Link>
       </div>
