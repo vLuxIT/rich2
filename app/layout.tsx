@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Suspense } from "react";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -15,7 +16,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-[#0F1117] text-white">
         <AppProviders>
-          <ReferralTracker />
+          <Suspense fallback={null}>
+            <ReferralTracker />
+          </Suspense>
 
           <div className="flex min-h-screen flex-col">
             <Header />
