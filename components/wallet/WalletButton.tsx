@@ -2,31 +2,36 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-const DAPP_URL =
-  typeof window !== "undefined"
-    ? window.location.href
-    : "https://yourdomain.com";
-
 function isMobileBrowser() {
   if (typeof navigator === "undefined") return false;
-
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
+function getDappUrl() {
+  if (typeof window === "undefined") return "";
+  return window.location.href;
+}
+
 function openMetaMask() {
-  const url = DAPP_URL.replace(/^https?:\/\//, "");
+  const url = getDappUrl().replace(/^https?:\/\//, "");
   window.location.href = `https://metamask.app.link/dapp/${url}`;
 }
 
 function openTrustWallet() {
   window.location.href = `https://link.trustwallet.com/open_url?coin_id=20000714&url=${encodeURIComponent(
-    DAPP_URL
+    getDappUrl()
   )}`;
 }
 
 function openOkxWallet() {
-  window.location.href = `okx://wallet/dapp/url?dappUrl=${encodeURIComponent(
-    DAPP_URL
+  window.location.href = `https://www.okx.com/download?deeplink=${encodeURIComponent(
+    `okx://wallet/dapp/details?dappUrl=${encodeURIComponent(getDappUrl())}`
+  )}`;
+}
+
+function openBitgetWallet() {
+  window.location.href = `https://bkcode.vip?action=dapp&url=${encodeURIComponent(
+    getDappUrl()
   )}`;
 }
 
@@ -53,50 +58,46 @@ export default function WalletButton({
           : "rounded-xl bg-yellow-400 px-4 py-2 font-semibold text-black transition hover:bg-yellow-300";
 
         if (!connected) {
-          if (isMobileBrowser() && fullWidth) {
+          if (isMobileBrowser()) {
             return (
-              <div className="space-y-3">
+              <div className={fullWidth ? "w-full space-y-3" : "relative"}>
                 <button
                   type="button"
                   onClick={openMetaMask}
                   className={buttonClass}
                 >
-                  Open in MetaMask
+                  Open Wallet
                 </button>
 
-                <button
-                  type="button"
-                  onClick={openTrustWallet}
-                  className={buttonClass}
-                >
-                  Open in Trust Wallet
-                </button>
+                {fullWidth && (
+                  <>
+                    <button type="button" onClick={openTrustWallet} className={buttonClass}>
+                      Open Trust Wallet
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={openOkxWallet}
-                  className={buttonClass}
-                >
-                  Open in OKX Wallet
-                </button>
+                    <button type="button" onClick={openOkxWallet} className={buttonClass}>
+                      Open OKX Wallet
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={openConnectModal}
-                  className="h-12 w-full rounded-[18px] border border-zinc-700 text-sm font-medium text-zinc-300"
-                >
-                  Other Wallets
-                </button>
+                    <button type="button" onClick={openBitgetWallet} className={buttonClass}>
+                      Open Bitget Wallet
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={openConnectModal}
+                      className="h-12 w-full rounded-[18px] border border-zinc-700 text-sm font-medium text-zinc-300"
+                    >
+                      Other Wallets
+                    </button>
+                  </>
+                )}
               </div>
             );
           }
 
           return (
-            <button
-              type="button"
-              onClick={openConnectModal}
-              className={buttonClass}
-            >
+            <button type="button" onClick={openConnectModal} className={buttonClass}>
               Connect Wallet
             </button>
           );
@@ -119,11 +120,7 @@ export default function WalletButton({
         }
 
         return (
-          <button
-            type="button"
-            onClick={openAccountModal}
-            className={buttonClass}
-          >
+          <button type="button" onClick={openAccountModal} className={buttonClass}>
             {account.displayName}
           </button>
         );
