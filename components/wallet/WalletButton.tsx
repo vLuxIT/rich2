@@ -21,8 +21,8 @@ export default function WalletButton({
         const connected = ready && account && chain;
 
         const buttonClass = fullWidth
-          ? "h-14 w-full rounded-[20px] bg-yellow-400 text-lg font-semibold text-black hover:bg-yellow-300 transition"
-          : "rounded-xl bg-yellow-400 px-4 py-2 font-semibold text-black hover:bg-yellow-300 transition";
+          ? "h-14 w-full rounded-[20px] bg-yellow-400 text-lg font-semibold text-black transition hover:bg-yellow-300"
+          : "rounded-xl bg-yellow-400 px-4 py-2 font-semibold text-black transition hover:bg-yellow-300";
 
         if (!connected) {
           return (
@@ -47,7 +47,7 @@ export default function WalletButton({
                   : "rounded-xl bg-red-500 px-4 py-2 font-semibold text-white"
               }
             >
-              Wrong Network
+              Switching to BSC...
             </button>
           );
         }

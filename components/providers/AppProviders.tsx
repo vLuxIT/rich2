@@ -16,11 +16,22 @@ import {
   injectedWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 
-import { WagmiProvider, createConfig, http } from "wagmi";
+import {
+  WagmiProvider,
+  createConfig,
+  http,
+  useAccount,
+  useChainId,
+  useSwitchChain,
+} from "wagmi";
+
 import { bsc } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 
-const projectId = "971ac7b17c3f4e0e3867c2dc84bc2ea7";
+const projectId =
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
+  "971ac7b17c3f4e0e3867c2dc84bc2ea7";
 
 const connectors = connectorsForWallets(
   [
@@ -29,15 +40,15 @@ const connectors = connectorsForWallets(
       wallets: [
         metaMaskWallet,
         trustWallet,
+        walletConnectWallet,
         bitgetWallet,
         okxWallet,
-        walletConnectWallet,
         injectedWallet,
       ],
     },
   ],
   {
-    appName: "RichCoin Swap",
+    appName: "RichCoin Dex",
     projectId,
   }
 );
@@ -53,6 +64,23 @@ const config = createConfig({
 
 const queryClient = new QueryClient();
 
+function AutoSwitchToBsc() {
+  const { isConnected } = useAccount();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+
+  useEffect(() => {
+    if (!isConnected) return;
+    if (chainId === bsc.id) return;
+
+    switchChain({
+      chainId: bsc.id,
+    });
+  }, [isConnected, chainId, switchChain]);
+
+  return null;
+}
+
 export default function AppProviders({
   children,
 }: {
@@ -61,7 +89,10 @@ export default function AppProviders({
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>{children}</RainbowKitProvider>
+        <RainbowKitProvider initialChain={bsc}>
+          <AutoSwitchToBsc />
+          {children}
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

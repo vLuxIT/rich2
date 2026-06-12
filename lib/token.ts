@@ -1,7 +1,7 @@
 export const RICH_TOKEN = {
-  symbol: "RICH",
+  symbol: "RIC",
   logo: "/rc.png",
-  address: "0x8d8e9f6aA383C8F175aEbf1c921c48368167380A" as const,
+  address: "0xc9CBFac89dbB869ea16D11DfBB74bEe8b119745c" as const,
   decimals: 18,
 };
 

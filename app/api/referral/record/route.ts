@@ -200,6 +200,7 @@ export async function POST(request: Request) {
         to: referrerAddress,
         amountRich: rewardAmountRich,
       });
+      
 
       const { error: updateError } = await supabaseAdmin
         .from("referral_rewards")

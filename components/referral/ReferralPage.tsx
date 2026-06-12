@@ -82,7 +82,7 @@ export default function ReferralPage() {
         </h1>
 
         <p className="mt-3 text-sm text-zinc-400">
-          Earn 5% rewards in RICH when users buy RichCoin through your referral
+          Earn 5% rewards in RIC when users buy RichCoin through your referral
           link.
         </p>
       </div>
@@ -121,7 +121,7 @@ export default function ReferralPage() {
 
           <StatCard
             title="Earned"
-            value={loadingStats ? "..." : `${earnedRich.toLocaleString()} RICH`}
+            value={loadingStats ? "..." : `${earnedRich.toLocaleString()} RIC`}
           />
         </div>
       </div>

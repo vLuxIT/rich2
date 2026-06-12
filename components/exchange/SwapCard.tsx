@@ -152,16 +152,18 @@ async function executeSwap() {
     const slippageBps = BigInt(Math.floor(Number(slippage) * 100));
     const bps = BigInt(10000);
 
-    const amountOutMin = (outputAmount * (bps - slippageBps)) / bps;
+    const isSellingRich =
+      payToken.symbol === "RIC" &&
+      receiveToken.symbol === "USDT";
+
+    const amountOutMin = isSellingRich
+      ? BigInt(0)
+      : (outputAmount * (bps - slippageBps)) / bps;
 
     const deadline = BigInt(
       Math.floor(Date.now() / 1000) +
         Number(deadlineMinutes || "20") * 60
     );
-
-    const isSellingRich =
-      payToken.symbol === "RICH" &&
-      receiveToken.symbol === "USDT";
 
     const hash = await writeContractAsync({
       abi: pancakeV2RouterAbi,
@@ -207,7 +209,7 @@ async function executeSwap() {
       if (!pendingReferrer) return;
 
       const isBuySwap =
-        payToken.symbol === "USDT" && receiveToken.symbol === "RICH";
+        payToken.symbol === "USDT" && receiveToken.symbol === "RIC";
 
       if (!isBuySwap) return;
 

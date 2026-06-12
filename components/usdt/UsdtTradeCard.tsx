@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowDownUp } from "lucide-react";
-
+import Link from "next/link";
 type Mode = "buy" | "sell";
 
 function cleanNumber(value: string) {
@@ -48,7 +48,7 @@ export default function UsdtTradeCard({ mode }: { mode: Mode }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[440px]">
+   <div className="mx-auto flex min-h-screen w-full flex-col items-center bg-[#0F1117] text-white">
       <div className="mb-8 text-center">
         <h1 className="bg-gradient-to-r from-[#FFF4B0] via-[#FFD700] to-[#D4AF37] bg-clip-text text-4xl font-semibold text-transparent">
           {isBuy ? "Buy USDT" : "Sell USDT"}
@@ -60,7 +60,23 @@ export default function UsdtTradeCard({ mode }: { mode: Mode }) {
             : "Sell USDT and receive Naira."}
         </p>
       </div>
+<div className="mb-4 w-full max-w-[440px]">
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href="/buy-usdt"
+            className="rounded-xl border border-zinc-800 bg-zinc-900 py-2.5 text-center text-sm font-medium transition hover:border-yellow-400"
+          >
+            Buy USDT
+          </Link>
 
+          <Link
+            href="/sell-usdt"
+            className="rounded-xl border border-zinc-800 bg-zinc-900 py-2.5 text-center text-sm font-medium transition hover:border-yellow-400"
+          >
+            Sell USDT
+          </Link>
+        </div>
+      </div>
       <div className="rounded-[24px] border border-zinc-800 bg-[#10141d] p-4 md:p-5">
         <CurrencyBox
           label="You pay"
