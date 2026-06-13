@@ -24,7 +24,7 @@ export default function BottomNav() {
         </Link>
 
         <Link
-          href="/sell-usdt"
+          href="/staking"
           className="flex flex-col items-center justify-center gap-1 text-xs font-medium text-zinc-300"
         >
           <LockIcon size={22} />
