@@ -2,12 +2,24 @@
 
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useConnect } from "wagmi";
 import { X } from "lucide-react";
 
 function isMobileBrowser() {
   if (typeof navigator === "undefined") return false;
 
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function hasInjectedWallet() {
+  if (typeof window === "undefined") return false;
+
+  const win = window as typeof window & {
+    ethereum?: unknown;
+    trustwallet?: unknown;
+  };
+
+  return Boolean(win.ethereum || win.trustwallet);
 }
 
 function getDappUrl() {
@@ -50,6 +62,20 @@ export default function WalletButton({
   fullWidth?: boolean;
 }) {
   const [showMobileWallets, setShowMobileWallets] = useState(false);
+  const { connect, connectors, isPending } = useConnect();
+
+  function connectInjectedWallet(openConnectModal?: () => void) {
+    const injectedConnector =
+      connectors.find((connector) => connector.id === "injected") ||
+      connectors.find((connector) => connector.type === "injected");
+
+    if (injectedConnector) {
+      connect({ connector: injectedConnector });
+      return;
+    }
+
+    openConnectModal?.();
+  }
 
   return (
     <>
@@ -70,25 +96,26 @@ export default function WalletButton({
             : "rounded-xl bg-yellow-400 px-4 py-2 font-semibold text-black transition hover:bg-yellow-300";
 
           if (!connected) {
-            if (isMobileBrowser()) {
-              return (
-                <button
-                  type="button"
-                  onClick={() => setShowMobileWallets(true)}
-                  className={buttonClass}
-                >
-                  Connect Wallet
-                </button>
-              );
-            }
-
             return (
               <button
                 type="button"
-                onClick={openConnectModal}
+                onClick={() => {
+                  if (isMobileBrowser() && hasInjectedWallet()) {
+                    connectInjectedWallet(openConnectModal);
+                    return;
+                  }
+
+                  if (isMobileBrowser()) {
+                    setShowMobileWallets(true);
+                    return;
+                  }
+
+                  openConnectModal();
+                }}
+                disabled={isPending}
                 className={buttonClass}
               >
-                Connect Wallet
+                {isPending ? "Connecting..." : "Connect Wallet"}
               </button>
             );
           }
@@ -143,7 +170,10 @@ export default function WalletButton({
                 <div className="space-y-3">
                   <button
                     type="button"
-                    onClick={openMetaMask}
+                    onClick={() => {
+                      setShowMobileWallets(false);
+                      openMetaMask();
+                    }}
                     className="flex h-13 w-full items-center justify-center rounded-[18px] bg-yellow-400 text-base font-semibold text-black hover:bg-yellow-300"
                   >
                     Open MetaMask
@@ -151,7 +181,10 @@ export default function WalletButton({
 
                   <button
                     type="button"
-                    onClick={openTrustWallet}
+                    onClick={() => {
+                      setShowMobileWallets(false);
+                      openTrustWallet();
+                    }}
                     className="flex h-13 w-full items-center justify-center rounded-[18px] bg-yellow-400 text-base font-semibold text-black hover:bg-yellow-300"
                   >
                     Open Trust Wallet
@@ -159,7 +192,10 @@ export default function WalletButton({
 
                   <button
                     type="button"
-                    onClick={openOkxWallet}
+                    onClick={() => {
+                      setShowMobileWallets(false);
+                      openOkxWallet();
+                    }}
                     className="flex h-13 w-full items-center justify-center rounded-[18px] bg-yellow-400 text-base font-semibold text-black hover:bg-yellow-300"
                   >
                     Open OKX Wallet
@@ -167,7 +203,10 @@ export default function WalletButton({
 
                   <button
                     type="button"
-                    onClick={openBitgetWallet}
+                    onClick={() => {
+                      setShowMobileWallets(false);
+                      openBitgetWallet();
+                    }}
                     className="flex h-13 w-full items-center justify-center rounded-[18px] bg-yellow-400 text-base font-semibold text-black hover:bg-yellow-300"
                   >
                     Open Bitget Wallet
