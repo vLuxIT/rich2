@@ -6,6 +6,17 @@ import Footer from "@/components/layout/Footer";
 import BottomNav from "@/components/layout/BottomNav";
 import AppProviders from "@/components/providers/AppProviders";
 import ReferralTracker from "@/components/referral/ReferralTracker";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "RichCoin Dex",
+  description: "Swap, stake, and earn with RichCoin.",
+  icons: {
+    icon: "/rc.png",
+    shortcut: "/rc.png",
+    apple: "/rc.png",
+  },
+};
 
 export default function RootLayout({
   children,
