@@ -8,7 +8,7 @@ import {
 } from "@rainbow-me/rainbowkit";
 
 import {
-  metaMaskWallet,
+  
   trustWallet,
   bitgetWallet,
   okxWallet,
@@ -38,7 +38,6 @@ const connectors = connectorsForWallets(
     {
       groupName: "Recommended",
       wallets: [
-        metaMaskWallet,
         trustWallet,
         walletConnectWallet,
         bitgetWallet,

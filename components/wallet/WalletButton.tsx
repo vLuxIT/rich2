@@ -168,16 +168,7 @@ export default function WalletButton({
                 </div>
 
                 <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowMobileWallets(false);
-                      openMetaMask();
-                    }}
-                    className="flex h-13 w-full items-center justify-center rounded-[18px] bg-yellow-400 text-base font-semibold text-black hover:bg-yellow-300"
-                  >
-                    Open MetaMask
-                  </button>
+                 
 
                   <button
                     type="button"
