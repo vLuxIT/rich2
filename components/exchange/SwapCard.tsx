@@ -186,58 +186,107 @@ async function executeSwap() {
 
     let cancelled = false;
 
-    async function handleConfirmedTx() {
-      await refetchAllowance();
+  async function handleConfirmedTx() {
+  await refetchAllowance();
 
-      if (txType === "approve") {
-        if (!autoSwapStarted && !cancelled) {
-          setAutoSwapStarted(true);
-          await executeSwap();
-        }
-
-        return;
-      }
-
-      if (txType !== "swap") return;
-      if (referralRecorded) return;
-      if (!address) return;
-
-      const pendingReferrer = localStorage.getItem(
-        "richcoin_pending_referrer"
-      );
-
-      if (!pendingReferrer) return;
-
-      const isBuySwap =
-        payToken.symbol === "USDT" && receiveToken.symbol === "RIC";
-
-      if (!isBuySwap) return;
-
-      if (pendingReferrer.toLowerCase() === address.toLowerCase()) {
-        return;
-      }
-
-      try {
-        await fetch("/api/referral/record", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            buyer: address,
-            referrer: pendingReferrer,
-            txHash,
-            amountRich: receiveAmount,
-          }),
-        });
-
-        if (!cancelled) {
-          setReferralRecorded(true);
-        }
-      } catch (error) {
-        console.error("Failed to record referral:", error);
-      }
+  if (txType === "approve") {
+    if (!autoSwapStarted && !cancelled) {
+      console.log("Approval confirmed. Starting swap...");
+      setAutoSwapStarted(true);
+      await executeSwap();
     }
+
+    return;
+  }
+
+  if (txType !== "swap") {
+    console.log("Skipping referral: txType is not swap");
+    return;
+  }
+
+  if (referralRecorded) {
+    console.log("Skipping referral: already recorded");
+    return;
+  }
+
+  if (!address) {
+    console.log("Skipping referral: no wallet address");
+    return;
+  }
+
+  const pendingReferrer = localStorage.getItem(
+    "richcoin_pending_referrer"
+  );
+
+  console.log("Pending referrer:", pendingReferrer);
+  console.log("Buyer:", address);
+  console.log("Swap txHash:", txHash);
+  console.log("Pay token:", payToken.symbol);
+  console.log("Receive token:", receiveToken.symbol);
+
+  if (!pendingReferrer) {
+    console.log("Skipping referral: no pending referrer");
+    return;
+  }
+
+  const isBuySwap =
+    payToken.symbol === "USDT" &&
+    receiveToken.symbol === "RIC";
+
+  console.log("isBuySwap:", isBuySwap);
+
+  if (!isBuySwap) {
+    console.log("Skipping referral: not a USDT → RIC buy");
+    return;
+  }
+
+  if (
+    pendingReferrer.toLowerCase() ===
+    address.toLowerCase()
+  ) {
+    console.log("Skipping referral: self-referral");
+    return;
+  }
+
+  try {
+    console.log("Sending referral record request...");
+
+    const response = await fetch("/api/referral/record", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        buyer: address,
+        referrer: pendingReferrer,
+        txHash,
+        amountRich: receiveAmount,
+      }),
+    });
+
+    const result = await response.json();
+
+    console.log("Referral API status:", response.status);
+    console.log("Referral API response:", result);
+
+    if (!response.ok) {
+      console.error(
+        "Referral API failed:",
+        response.status,
+        result
+      );
+      return;
+    }
+
+    console.log("Referral recorded successfully");
+
+    if (!cancelled) {
+      setReferralRecorded(true);
+    }
+  } catch (error) {
+    console.error("Failed to record referral:", error);
+  }
+}
 
     void handleConfirmedTx();
 
