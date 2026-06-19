@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
-import {
-  decodeFunctionData,
-  formatUnits,
-  getAddress,
-  parseAbiItem,
-} from "viem";
+import { formatUnits, getAddress, parseAbiItem } from "viem";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { bscClient } from "@/lib/bscClient";
 import { RICH_TOKEN, USDT_TOKEN } from "@/lib/token";
-import {
-  PANCAKE_V2_ROUTER,
-  pancakeV2RouterAbi,
-} from "@/lib/pancake";
 import { sendRichReferralReward } from "@/lib/marketingWallet";
 
 const transferEvent = parseAbiItem(
@@ -22,7 +13,6 @@ const transferEvent = parseAbiItem(
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
     const { buyer, referrer, txHash } = body;
 
     if (!buyer || !referrer || !txHash) {
@@ -58,10 +48,6 @@ export async function POST(request: Request) {
       });
     }
 
-    const transaction = await bscClient.getTransaction({
-      hash: txHash,
-    });
-
     const receipt = await bscClient.getTransactionReceipt({
       hash: txHash,
     });
@@ -69,64 +55,6 @@ export async function POST(request: Request) {
     if (receipt.status !== "success") {
       return NextResponse.json(
         { message: "Transaction was not successful" },
-        { status: 400 }
-      );
-    }
-
-    // if (
-    //   transaction.to?.toLowerCase() !== PANCAKE_V2_ROUTER.toLowerCase()
-    // ) {
-    //   return NextResponse.json(
-    //     { message: "Transaction was not sent to PancakeSwap router" },
-    //     { status: 400 }
-    //   );
-    // }
-
-    const decoded = decodeFunctionData({
-      abi: pancakeV2RouterAbi,
-      data: transaction.input,
-    });
-
-    const isSupportedSwap =
-      decoded.functionName === "swapExactTokensForTokens" ||
-      decoded.functionName ===
-        "swapExactTokensForTokensSupportingFeeOnTransferTokens";
-
-    if (!isSupportedSwap) {
-      return NextResponse.json(
-        { message: "Transaction is not a supported swap" },
-        { status: 400 }
-      );
-    }
-
-    const args = decoded.args as unknown as [
-      bigint,
-      bigint,
-      readonly `0x${string}`[],
-      `0x${string}`,
-      bigint
-    ];
-
-    const path = args[2];
-    const swapRecipient = getAddress(args[3]);
-
-    if (swapRecipient.toLowerCase() !== buyerAddress.toLowerCase()) {
-      return NextResponse.json(
-        { message: "Swap recipient mismatch" },
-        { status: 400 }
-      );
-    }
-
-    const firstToken = path[0]?.toLowerCase();
-    const lastToken = path[path.length - 1]?.toLowerCase();
-
-    const isBuySwap =
-      firstToken === USDT_TOKEN.address.toLowerCase() &&
-      lastToken === RICH_TOKEN.address.toLowerCase();
-
-    if (!isBuySwap) {
-      return NextResponse.json(
-        { message: "Referral rewards only apply to USDT → RIC buys" },
         { status: 400 }
       );
     }
@@ -142,19 +70,33 @@ export async function POST(request: Request) {
     });
 
     const richReceivedRaw = richTransfersToBuyer
-      .filter(
-        (log) =>
-          log.transactionHash.toLowerCase() === normalizedTxHash
-      )
-      .reduce((total, log) => {
-        if (!log.args.value) return total;
-
-        return total + log.args.value;
-      }, BigInt(0));
+      .filter((log) => log.transactionHash.toLowerCase() === normalizedTxHash)
+      .reduce((total, log) => total + (log.args.value ?? BigInt(0)), BigInt(0));
 
     if (richReceivedRaw <= BigInt(0)) {
       return NextResponse.json(
         { message: "No RIC transfer to buyer found" },
+        { status: 400 }
+      );
+    }
+
+    const usdtTransfersFromBuyer = await bscClient.getLogs({
+      address: USDT_TOKEN.address,
+      event: transferEvent,
+      fromBlock: receipt.blockNumber,
+      toBlock: receipt.blockNumber,
+      args: {
+        from: buyerAddress,
+      },
+    });
+
+    const usdtSpentRaw = usdtTransfersFromBuyer
+      .filter((log) => log.transactionHash.toLowerCase() === normalizedTxHash)
+      .reduce((total, log) => total + (log.args.value ?? BigInt(0)), BigInt(0));
+
+    if (usdtSpentRaw <= BigInt(0)) {
+      return NextResponse.json(
+        { message: "No USDT transfer from buyer found" },
         { status: 400 }
       );
     }
@@ -211,14 +153,11 @@ export async function POST(request: Request) {
       console.log("Referrer:", referrerAddress);
       console.log("RIC Received:", richReceived);
       console.log("Reward Amount:", rewardAmountRich);
-      console.log("Sending reward from marketing wallet...");
 
       const rewardTxHash = await sendRichReferralReward({
         to: referrerAddress,
         amountRich: rewardAmountRich,
       });
-
-      console.log("Reward TX Hash:", rewardTxHash);
 
       const { error: updateError } = await supabaseAdmin
         .from("referral_rewards")
@@ -234,8 +173,6 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
-
-      console.log("Referral reward marked as PAID");
 
       return NextResponse.json({
         success: true,
