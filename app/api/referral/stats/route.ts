@@ -22,18 +22,23 @@ export async function GET(request: Request) {
 
     const normalizedWallet = wallet.toLowerCase();
 
-    const { count: referralCount } = await supabaseAdmin
-      .from("referrals")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
+    const { data: rewards, error: rewardsError } = await supabaseAdmin
+      .from("referral_rewards")
+      .select("buyer_wallet, reward_amount_rich")
       .eq("referrer_wallet", normalizedWallet);
 
-    const { data: rewards } = await supabaseAdmin
-      .from("referral_rewards")
-      .select("reward_amount_rich")
-      .eq("referrer_wallet", normalizedWallet);
+    if (rewardsError) {
+      return NextResponse.json(
+        { message: rewardsError.message },
+        { status: 500 }
+      );
+    }
+
+    const uniqueBuyers = new Set(
+      (rewards || []).map((reward) => reward.buyer_wallet)
+    );
+
+    const referralCount = uniqueBuyers.size;
 
     const earnedRich = (rewards || []).reduce((total, reward) => {
       return total + Number(reward.reward_amount_rich || 0);
@@ -45,14 +50,13 @@ export async function GET(request: Request) {
       functionName: "balanceOf",
       args: [marketingAccount.address],
     });
-    
 
     const rewardsLeftRich = Number(
       formatUnits(marketingBalanceRaw, RICH_TOKEN.decimals)
     );
 
     return NextResponse.json({
-      referralCount: referralCount || 0,
+      referralCount,
       earnedRich,
       rewardsLeftRich,
     });
