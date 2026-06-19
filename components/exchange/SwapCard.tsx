@@ -144,7 +144,8 @@ async function executeSwap() {
     if (!address || !amountIn || !quoteData || quoteData.length < 2) {
       return;
     }
-
+setReferralRecorded(false);
+    setTxHash(undefined);
     setTxType("swap");
 
     const outputAmount = quoteData[quoteData.length - 1];
