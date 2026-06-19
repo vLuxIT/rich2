@@ -73,14 +73,14 @@ export async function POST(request: Request) {
       );
     }
 
-    if (
-      transaction.to?.toLowerCase() !== PANCAKE_V2_ROUTER.toLowerCase()
-    ) {
-      return NextResponse.json(
-        { message: "Transaction was not sent to PancakeSwap router" },
-        { status: 400 }
-      );
-    }
+    // if (
+    //   transaction.to?.toLowerCase() !== PANCAKE_V2_ROUTER.toLowerCase()
+    // ) {
+    //   return NextResponse.json(
+    //     { message: "Transaction was not sent to PancakeSwap router" },
+    //     { status: 400 }
+    //   );
+    // }
 
     const decoded = decodeFunctionData({
       abi: pancakeV2RouterAbi,
