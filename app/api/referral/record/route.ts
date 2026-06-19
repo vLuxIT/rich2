@@ -73,13 +73,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (transaction.from.toLowerCase() !== buyerAddress.toLowerCase()) {
-      return NextResponse.json(
-        { message: "Transaction buyer mismatch" },
-        { status: 400 }
-      );
-    }
-
     if (
       transaction.to?.toLowerCase() !== PANCAKE_V2_ROUTER.toLowerCase()
     ) {
@@ -115,6 +108,14 @@ export async function POST(request: Request) {
     ];
 
     const path = args[2];
+    const swapRecipient = getAddress(args[3]);
+
+    if (swapRecipient.toLowerCase() !== buyerAddress.toLowerCase()) {
+      return NextResponse.json(
+        { message: "Swap recipient mismatch" },
+        { status: 400 }
+      );
+    }
 
     const firstToken = path[0]?.toLowerCase();
     const lastToken = path[path.length - 1]?.toLowerCase();
@@ -125,7 +126,7 @@ export async function POST(request: Request) {
 
     if (!isBuySwap) {
       return NextResponse.json(
-        { message: "Referral rewards only apply to USDT → RICH buys" },
+        { message: "Referral rewards only apply to USDT → RIC buys" },
         { status: 400 }
       );
     }
@@ -153,7 +154,7 @@ export async function POST(request: Request) {
 
     if (richReceivedRaw <= BigInt(0)) {
       return NextResponse.json(
-        { message: "No RICH transfer to buyer found" },
+        { message: "No RIC transfer to buyer found" },
         { status: 400 }
       );
     }
@@ -164,16 +165,25 @@ export async function POST(request: Request) {
 
     const rewardAmountRich = richReceived * 0.05;
 
-    await supabaseAdmin.from("referrals").upsert(
-      {
-        buyer_wallet: buyerAddress.toLowerCase(),
-        referrer_wallet: referrerAddress.toLowerCase(),
-      },
-      {
-        onConflict: "buyer_wallet",
-        ignoreDuplicates: true,
-      }
-    );
+    const { error: referralError } = await supabaseAdmin
+      .from("referrals")
+      .upsert(
+        {
+          buyer_wallet: buyerAddress.toLowerCase(),
+          referrer_wallet: referrerAddress.toLowerCase(),
+        },
+        {
+          onConflict: "buyer_wallet",
+          ignoreDuplicates: true,
+        }
+      );
+
+    if (referralError) {
+      return NextResponse.json(
+        { message: referralError.message },
+        { status: 500 }
+      );
+    }
 
     const { data: insertedReward, error: insertError } = await supabaseAdmin
       .from("referral_rewards")
@@ -196,11 +206,19 @@ export async function POST(request: Request) {
     }
 
     try {
+      console.log("========== REFERRAL PAYOUT ==========");
+      console.log("Buyer:", buyerAddress);
+      console.log("Referrer:", referrerAddress);
+      console.log("RIC Received:", richReceived);
+      console.log("Reward Amount:", rewardAmountRich);
+      console.log("Sending reward from marketing wallet...");
+
       const rewardTxHash = await sendRichReferralReward({
         to: referrerAddress,
         amountRich: rewardAmountRich,
       });
-      
+
+      console.log("Reward TX Hash:", rewardTxHash);
 
       const { error: updateError } = await supabaseAdmin
         .from("referral_rewards")
@@ -216,6 +234,8 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
+
+      console.log("Referral reward marked as PAID");
 
       return NextResponse.json({
         success: true,
