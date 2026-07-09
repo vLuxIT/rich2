@@ -7,6 +7,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import AppProviders from "@/components/providers/AppProviders";
 import ReferralTracker from "@/components/referral/ReferralTracker";
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "RichCoin Dex",
@@ -45,6 +46,7 @@ export default function RootLayout({
             <Footer />
           </div>
         </AppProviders>
+        <Toaster richColors position="top-center" closeButton />
       </body>
     </html>
   );
