@@ -66,7 +66,7 @@ export default function UsdtTradeCard({ mode }: { mode: Mode }) {
     script.async = true;
 
     script.onerror = () => {
-      setWidgetError("Unable to load Quidax Ramp widget.");
+      setWidgetError("Unable to load Ramp widget.");
     };
 
     document.body.appendChild(script);
@@ -220,7 +220,7 @@ export default function UsdtTradeCard({ mode }: { mode: Mode }) {
             <span className="text-zinc-500">Route</span>
 
             <span className="rounded-full border border-yellow-600/20 bg-yellow-500/10 px-3 py-1 text-sm font-medium text-yellow-400">
-              ⚡ Quidax Ramp
+              ⚡ Richcoin Ramp
             </span>
           </div>
 
@@ -241,7 +241,7 @@ export default function UsdtTradeCard({ mode }: { mode: Mode }) {
           <div className="mt-3 flex items-center justify-between">
             <span className="text-zinc-500">Provider</span>
 
-            <span className="text-yellow-400">Quidax</span>
+            <span className="text-yellow-400">Richcoin</span>
           </div>
         </div>
 

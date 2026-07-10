@@ -21,6 +21,8 @@ export default function StakeBox({
   selectedPlan,
   hasAmount,
   insufficientBalance,
+  belowMinimumStake,
+  minimumStakeText,
   needsApproval,
   isPending,
   isConfirming,
@@ -36,6 +38,8 @@ export default function StakeBox({
   selectedPlan?: StakingPlan;
   hasAmount: boolean;
   insufficientBalance: boolean;
+  belowMinimumStake: boolean;
+  minimumStakeText: string;
   needsApproval: boolean;
   isPending: boolean;
   isConfirming: boolean;
@@ -65,6 +69,8 @@ export default function StakeBox({
 
   if (insufficientBalance) {
     buttonText = "Insufficient RIC Balance";
+  } else if (belowMinimumStake) {
+    buttonText = `Minimum ${minimumStakeText} RIC`;
   } else if (hasAmount && needsApproval) {
     buttonText = disabled ? "Approving..." : "Approve RIC";
     buttonAction = onApprove;
@@ -85,6 +91,9 @@ export default function StakeBox({
             {selectedPlan
               ? `${selectedPlan.days} days / ${selectedPlan.rewardPercent}`
               : "None"}
+          </p>
+          <p className="mt-1 text-[11px] text-zinc-500">
+            Minimum stake: {minimumStakeText} RIC
           </p>
         </div>
 
@@ -119,6 +128,12 @@ export default function StakeBox({
           </div>
         </div>
       </div>
+
+      {belowMinimumStake && hasAmount && (
+        <p className="mt-2 text-xs text-yellow-400">
+          Minimum stake is {minimumStakeText} RIC.
+        </p>
+      )}
 
       <button
         type="button"

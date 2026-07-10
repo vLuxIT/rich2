@@ -71,25 +71,21 @@ export default function StakingDashboard() {
 
   const { writeContractAsync, isPending } = useWriteContract();
 
-  const {
-    isLoading: isApprovalConfirming,
-    isSuccess: approvalSuccess,
-  } = useWaitForTransactionReceipt({
-    hash: approvalHash,
-    query: {
-      enabled: Boolean(approvalHash),
-    },
-  });
+  const { isLoading: isApprovalConfirming, isSuccess: approvalSuccess } =
+    useWaitForTransactionReceipt({
+      hash: approvalHash,
+      query: {
+        enabled: Boolean(approvalHash),
+      },
+    });
 
-  const {
-    isLoading: isStakeConfirming,
-    isSuccess: stakeSuccess,
-  } = useWaitForTransactionReceipt({
-    hash: stakeHash,
-    query: {
-      enabled: Boolean(stakeHash),
-    },
-  });
+  const { isLoading: isStakeConfirming, isSuccess: stakeSuccess } =
+    useWaitForTransactionReceipt({
+      hash: stakeHash,
+      query: {
+        enabled: Boolean(stakeHash),
+      },
+    });
 
   const { data: ricBalance } = useBalance({
     address,
@@ -109,6 +105,12 @@ export default function StakingDashboard() {
     address: STAKING_CONTRACT,
     abi: stakingAbi,
     functionName: "stakingStats",
+  });
+
+  const { data: minimumStakeRaw } = useReadContract({
+    address: STAKING_CONTRACT,
+    abi: stakingAbi,
+    functionName: "minimumStake",
   });
 
   const { data: userStakeCount } = useReadContract({
@@ -156,10 +158,17 @@ export default function StakingDashboard() {
   const activeStakeTotal = stats?.[5];
   const activeStakerTotal = stats?.[6];
 
+  const minimumStake = minimumStakeRaw as bigint | undefined;
+  const minimumStakeText = formatRIC(minimumStake);
+
   const hasAmount = Boolean(amountIn && amountIn > BigInt(0));
 
   const insufficientBalance = Boolean(
     amountIn && ricBalance?.value && amountIn > ricBalance.value
+  );
+
+  const belowMinimumStake = Boolean(
+    amountIn && minimumStake && amountIn < minimumStake
   );
 
   const needsApproval = Boolean(
@@ -172,6 +181,11 @@ export default function StakingDashboard() {
 
   async function approveRIC() {
     if (!amountIn || !selectedPlan) return;
+
+    if (minimumStake && amountIn < minimumStake) {
+      toast.error(`Minimum stake is ${minimumStakeText} RIC.`);
+      return;
+    }
 
     try {
       setTxType("approve");
@@ -216,6 +230,11 @@ export default function StakingDashboard() {
     const finalPlan = planOverride ?? selectedPlan?.id;
 
     if (!finalAmount || finalPlan === undefined) return;
+
+    if (minimumStake && finalAmount < minimumStake) {
+      toast.error(`Minimum stake is ${minimumStakeText} RIC.`);
+      return;
+    }
 
     try {
       setTxType("stake");
@@ -333,6 +352,8 @@ export default function StakingDashboard() {
         selectedPlan={selectedPlan}
         hasAmount={hasAmount}
         insufficientBalance={insufficientBalance}
+        belowMinimumStake={belowMinimumStake}
+        minimumStakeText={minimumStakeText}
         needsApproval={needsApproval}
         isPending={isPending}
         isConfirming={isConfirming}
