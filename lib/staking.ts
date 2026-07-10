@@ -1,5 +1,5 @@
 export const STAKING_CONTRACT =
-  "0x3bfF86c719cc74a2df010cB23f506a95B6527aa8" as const;
+  "0xCA7CDD65d3926024Ab054A8A799A1D9A8E7f13e4" as const;
 
 export const stakingAbi = [
   {

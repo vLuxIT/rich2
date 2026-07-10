@@ -76,12 +76,12 @@ export default function StakeBox({
   }
 
   return (
-    <div className="mt-6 rounded-[24px] border border-zinc-800 bg-[#10141d] p-4">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="mt-5 rounded-[20px] border border-zinc-800 bg-[#10141d] p-4">
+      <div className="mb-3 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Stake Amount</h2>
-          <p className="mt-1 text-xs text-zinc-500">
-            Selected plan:{" "}
+          <h2 className="text-base font-semibold">Stake Amount</h2>
+          <p className="mt-1 text-[11px] text-zinc-500">
+            Selected:{" "}
             {selectedPlan
               ? `${selectedPlan.days} days / ${selectedPlan.rewardPercent}`
               : "None"}
@@ -97,8 +97,8 @@ export default function StakeBox({
         </button>
       </div>
 
-      <div className="rounded-[18px] bg-[#090d15] p-3">
-        <div className="mb-3 flex items-center justify-between text-xs text-zinc-500">
+      <div className="rounded-[16px] bg-[#090d15] p-3">
+        <div className="mb-2 flex items-center justify-between text-[11px] text-zinc-500">
           <span>You stake</span>
           <span>Balance: {formatNumber(balance)} RIC</span>
         </div>
@@ -110,15 +110,11 @@ export default function StakeBox({
             placeholder="0.0"
             value={stakeAmount}
             onChange={(e) => handleAmountChange(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-[26px] font-semibold text-white outline-none"
+            className="min-w-0 flex-1 bg-transparent text-[24px] font-semibold text-white outline-none"
           />
 
           <div className="flex shrink-0 items-center gap-2 rounded-full bg-[#202838] px-3 py-2 text-sm font-semibold text-white">
-            <img
-              src="/rc.png"
-              alt="RIC"
-              className="h-7 w-7 rounded-full"
-            />
+            <img src="/rc.png" alt="RIC" className="h-6 w-6 rounded-full" />
             <span>RIC</span>
           </div>
         </div>
@@ -128,7 +124,7 @@ export default function StakeBox({
         type="button"
         onClick={buttonAction}
         disabled={buttonDisabled}
-        className={`mt-5 h-12 w-full rounded-[18px] text-base font-semibold ${
+        className={`mt-4 h-11 w-full rounded-[16px] text-sm font-semibold ${
           buttonDisabled
             ? "cursor-not-allowed bg-gradient-to-r from-[#D4AF37]/50 via-[#FFD700]/50 to-[#FFB300]/50 text-black/50"
             : "bg-yellow-400 text-black hover:bg-yellow-300"
@@ -138,7 +134,7 @@ export default function StakeBox({
       </button>
 
       {txHash && (
-        <div className="mt-4 rounded-[18px] border border-yellow-700/40 bg-gradient-to-br from-[#1c1708] via-[#15110a] to-[#0f0f0f] p-4 text-sm">
+        <div className="mt-3 rounded-[16px] border border-yellow-700/40 bg-gradient-to-br from-[#1c1708] via-[#15110a] to-[#0f0f0f] p-3 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-zinc-500">Transaction</span>
 
@@ -157,7 +153,7 @@ export default function StakeBox({
             href={`https://bscscan.com/tx/${txHash}`}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 block break-all text-xs text-yellow-400 hover:underline"
+            className="mt-2 block break-all text-[11px] text-yellow-400 hover:underline"
           >
             View on BscScan
           </a>

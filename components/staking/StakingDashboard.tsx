@@ -58,22 +58,36 @@ export default function StakingDashboard() {
 
   const [stakeAmount, setStakeAmount] = useState("");
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [approvalHash, setApprovalHash] = useState<`0x${string}` | undefined>();
+  const [stakeHash, setStakeHash] = useState<`0x${string}` | undefined>();
   const [txType, setTxType] = useState<"approve" | "stake" | null>(null);
 
   const autoStakeStartedRef = useRef(false);
   const stakeRedirectStartedRef = useRef(false);
   const pendingStakeAmountRef = useRef<bigint | undefined>(undefined);
   const pendingStakePlanRef = useRef<number | undefined>(undefined);
-  const pendingStakeAmountTextRef = useRef<string>("");
+  const pendingStakeAmountTextRef = useRef("");
   const pendingStakePlanDaysRef = useRef<number | undefined>(undefined);
 
   const { writeContractAsync, isPending } = useWriteContract();
 
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
+  const {
+    isLoading: isApprovalConfirming,
+    isSuccess: approvalSuccess,
+  } = useWaitForTransactionReceipt({
+    hash: approvalHash,
     query: {
-      enabled: Boolean(txHash),
+      enabled: Boolean(approvalHash),
+    },
+  });
+
+  const {
+    isLoading: isStakeConfirming,
+    isSuccess: stakeSuccess,
+  } = useWaitForTransactionReceipt({
+    hash: stakeHash,
+    query: {
+      enabled: Boolean(stakeHash),
     },
   });
 
@@ -152,11 +166,18 @@ export default function StakingDashboard() {
     amountIn && allowance !== undefined && allowance < amountIn
   );
 
+  const isConfirming = isApprovalConfirming || isStakeConfirming;
+  const txHash = stakeHash || approvalHash;
+  const txSuccess = txType === "stake" ? stakeSuccess : approvalSuccess;
+
   async function approveRIC() {
     if (!amountIn || !selectedPlan) return;
 
     try {
       setTxType("approve");
+      setApprovalHash(undefined);
+      setStakeHash(undefined);
+
       autoStakeStartedRef.current = false;
       stakeRedirectStartedRef.current = false;
 
@@ -176,7 +197,7 @@ export default function StakingDashboard() {
         args: [STAKING_CONTRACT, amountIn],
       });
 
-      setTxHash(hash);
+      setApprovalHash(hash);
     } catch (error) {
       toast.dismiss("staking-approval");
       toast.error("Approval was cancelled or failed.");
@@ -210,7 +231,7 @@ export default function StakingDashboard() {
         args: [finalAmount, finalPlan as 0 | 1 | 2 | 3],
       });
 
-      setTxHash(hash);
+      setStakeHash(hash);
       setStakeAmount("");
       pendingStakeAmountRef.current = undefined;
       pendingStakePlanRef.current = undefined;
@@ -222,8 +243,7 @@ export default function StakingDashboard() {
   }
 
   useEffect(() => {
-    if (!isSuccess) return;
-    if (txType !== "approve") return;
+    if (!approvalSuccess) return;
     if (autoStakeStartedRef.current) return;
 
     autoStakeStartedRef.current = true;
@@ -244,11 +264,10 @@ export default function StakingDashboard() {
 
     void continueToStakeAfterApproval();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccess, txType, refetchAllowance]);
+  }, [approvalSuccess, refetchAllowance]);
 
   useEffect(() => {
-    if (!isSuccess) return;
-    if (txType !== "stake") return;
+    if (!stakeSuccess) return;
     if (stakeRedirectStartedRef.current) return;
 
     stakeRedirectStartedRef.current = true;
@@ -269,7 +288,7 @@ export default function StakingDashboard() {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isSuccess, txType, router]);
+  }, [stakeSuccess, router]);
 
   return (
     <div className="mx-auto w-full max-w-[520px] pb-6 text-white">
@@ -318,7 +337,7 @@ export default function StakingDashboard() {
         isPending={isPending}
         isConfirming={isConfirming}
         txType={txType}
-        isSuccess={isSuccess}
+        isSuccess={txSuccess}
         txHash={txHash}
         onApprove={approveRIC}
         onStake={() => void stakeRIC()}

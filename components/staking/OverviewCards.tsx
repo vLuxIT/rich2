@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Clock, Gift, Lock, TrendingUp, Wallet } from "lucide-react";
 
 export default function OverviewCards({
@@ -15,34 +16,35 @@ export default function OverviewCards({
 }) {
   return (
     <>
-      <div className="mt-6 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">My Staking Overview</h2>
-       <a href="/user-stakes" className="text-sm text-yellow-400">
-  My Stakes →
-</a>
+      <div className="mt-5 flex items-center justify-between">
+        <h2 className="text-base font-semibold">My Staking Overview</h2>
+
+        <Link href="/user-stakes" className="text-xs text-yellow-400">
+          My Stakes →
+        </Link>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 rounded-[22px] border border-zinc-800 bg-[#10141d] p-4">
-        <OverviewCard title="Your Stakes" value={userStakeCount} icon={<Lock />} />
-        <OverviewCard title="Active Stakers" value={activeStakers} icon={<Wallet />} />
-        <OverviewCard title="Active Stakes" value={activeStakes} icon={<TrendingUp />} />
-        <OverviewCard title="Claim Interval" value="7 Days" icon={<Clock />} />
+      <div className="mt-3 grid grid-cols-2 gap-2 rounded-[18px] border border-zinc-800 bg-[#10141d] p-3">
+        <OverviewCard title="Your Stakes" value={userStakeCount} icon={<Lock size={16} />} />
+        <OverviewCard title="Active Stakers" value={activeStakers} icon={<Wallet size={16} />} />
+        <OverviewCard title="Active Stakes" value={activeStakes} icon={<TrendingUp size={16} />} />
+        <OverviewCard title="Claim Interval" value="7 Days" icon={<Clock size={16} />} />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <InfoCard
           title="Rewards Reserved"
           value={rewardsReserved}
-          note="Reserved for active stakes"
-          icon={<TrendingUp />}
+          note="For active stakes"
+          icon={<TrendingUp size={18} />}
           green
         />
 
         <InfoCard
           title="Rewards Paid"
           value={rewardsPaid}
-          note="Total rewards distributed"
-          icon={<Gift />}
+          note="Distributed rewards"
+          icon={<Gift size={18} />}
         />
       </div>
     </>
@@ -59,11 +61,11 @@ function OverviewCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[16px] bg-[#090d15] p-3">
-      <p className="text-xs text-zinc-500">{title}</p>
-      <p className="mt-2 text-base font-semibold">{value}</p>
+    <div className="rounded-[14px] bg-[#090d15] p-3">
+      <p className="text-[11px] text-zinc-500">{title}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
 
-      <div className="mt-3 flex h-9 w-9 items-center justify-center rounded-full bg-yellow-400/10 text-yellow-400">
+      <div className="mt-2 flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400/10 text-yellow-400">
         {icon}
       </div>
     </div>
@@ -84,24 +86,24 @@ function InfoCard({
   green?: boolean;
 }) {
   return (
-    <div className="rounded-[22px] border border-zinc-800 bg-[#10141d] p-4">
-      <p className="text-sm text-zinc-400">{title}</p>
+    <div className="rounded-[18px] border border-zinc-800 bg-[#10141d] p-3">
+      <p className="text-xs text-zinc-400">{title}</p>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-2 flex items-center justify-between">
         <p
-          className={`text-2xl font-bold ${
+          className={`text-lg font-bold ${
             green ? "text-green-400" : "text-yellow-400"
           }`}
         >
           {value}
         </p>
 
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-400/10 text-yellow-400">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-yellow-400/10 text-yellow-400">
           {icon}
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-zinc-500">{note}</p>
+      <p className="mt-3 text-[11px] text-zinc-500">{note}</p>
     </div>
   );
 }
