@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   useAccount,
@@ -60,8 +60,8 @@ function formatQuote(value: string | number) {
 export default function SwapCard() {
   const { address } = useAccount();
 
-  const [payToken, setPayToken] = useState(USDT_TOKEN);
-  const [receiveToken, setReceiveToken] = useState(RICH_TOKEN);
+  const [payToken, setPayToken] = useState<SwapToken>(USDT_TOKEN);
+  const [receiveToken, setReceiveToken] = useState<SwapToken>(RICH_TOKEN);
   const [payAmount, setPayAmount] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [slippage, setSlippage] = useState("5.0");
@@ -118,11 +118,9 @@ export default function SwapCard() {
     },
   });
 
-  const quoteAmounts = quoteData as readonly bigint[] | undefined;
-
   const receiveAmount =
-    quoteAmounts && quoteAmounts.length > 1
-      ? formatUnits(quoteAmounts[quoteAmounts.length - 1], receiveToken.decimals)
+    quoteData && quoteData.length > 1
+      ? formatUnits(quoteData[quoteData.length - 1], receiveToken.decimals)
       : "";
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -139,9 +137,9 @@ export default function SwapCard() {
     amountIn && allowance !== undefined && allowance < amountIn
   );
 
-  const executeSwap = useCallback(async () => {
+  async function executeSwap() {
     try {
-      if (!address || !amountIn || !quoteAmounts || quoteAmounts.length < 2) {
+      if (!address || !amountIn || !quoteData || quoteData.length < 2) {
         return;
       }
 
@@ -149,7 +147,7 @@ export default function SwapCard() {
       setTxHash(undefined);
       setTxType("swap");
 
-      const outputAmount = quoteAmounts[quoteAmounts.length - 1];
+      const outputAmount = quoteData[quoteData.length - 1];
       const slippageBps = BigInt(Math.floor(Number(slippage) * 100));
       const bps = BigInt(10000);
 
@@ -178,17 +176,7 @@ export default function SwapCard() {
     } catch (error) {
       console.error("Swap failed:", error);
     }
-  }, [
-    address,
-    amountIn,
-    quoteAmounts,
-    slippage,
-    payToken.symbol,
-    receiveToken.symbol,
-    deadlineMinutes,
-    writeContractAsync,
-    path,
-  ]);
+  }
 
   useEffect(() => {
     if (!isTxSuccess || !txHash) return;
@@ -303,7 +291,6 @@ export default function SwapCard() {
     receiveToken.symbol,
     receiveAmount,
     refetchAllowance,
-    executeSwap,
   ]);
 
   useEffect(() => {
@@ -360,7 +347,7 @@ export default function SwapCard() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-[440px] rounded-[24px] border border-zinc-800 bg-[#10141d] p-4 shadow-none md:p-5">
+      <div className="w-full rounded-[24px] border border-zinc-800 bg-[#10141d] p-4 shadow-none md:p-5">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-xl font-medium">Swap</h2>
 
