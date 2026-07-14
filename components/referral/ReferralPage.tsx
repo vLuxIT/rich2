@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Copy,
-  FolderOpen,
   Gift,
   HelpCircle,
   Link as LinkIcon,
@@ -39,16 +38,16 @@ function ReferralHero() {
 
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <span className="hidden h-10 w-10 place-items-center rounded-full bg-[#FFC928]/12 text-[#FFC928] lg:grid">
-              <Users size={24} />
+            <span className="hidden h-9 w-9 place-items-center rounded-full bg-[#FFC928]/12 text-[#FFC928] lg:grid">
+              <Users size={21} />
             </span>
 
-            <h1 className="text-2xl font-black text-white md:text-3xl">
+            <h1 className="text-xl font-black text-white md:text-2xl">
               Referral Program
             </h1>
           </div>
 
-          <p className="mt-2 max-w-md text-sm leading-6 text-[#A4AAB7] md:text-base">
+          <p className="mt-2 max-w-md text-xs leading-5 text-[#A4AAB7] md:text-sm md:leading-6">
             Earn 5% rewards in RIC when users buy RichCoin through your referral
             link.
           </p>
@@ -60,7 +59,7 @@ function ReferralHero() {
           <div className="absolute right-20 top-1/2 h-24 w-24 -translate-y-1/2">
             <Image src="/rc.png" alt="RichCoin" fill sizes="96px" className="object-contain" />
           </div>
-          <Gift className="absolute right-36 top-7 text-[#FFC928]" size={38} />
+          <Gift className="absolute right-36 top-7 text-[#FFC928]" size={34} />
         </div>
 
         <div className="absolute right-0 top-1/2 h-24 w-36 -translate-y-1/2 lg:hidden">
@@ -90,18 +89,18 @@ function RewardsCard({
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,201,40,0.08),transparent_65%)]" />
 
       <div className="relative z-10">
-        <div className="flex items-center gap-2 text-sm text-[#A4AAB7]">
+        <div className="flex items-center gap-2 text-xs text-[#A4AAB7] md:text-sm">
           <span>Rewards left to claim</span>
-          <HelpCircle size={14} />
+          <HelpCircle size={13} />
         </div>
 
-        <p className="mt-3 text-[26px] font-black leading-none text-[#FFC928] md:text-3xl">
+        <p className="mt-3 text-2xl font-black leading-none text-[#FFC928] md:text-[26px]">
           {loading ? "..." : `${formatRich(value)} RICH`}
         </p>
       </div>
 
-      <div className="absolute right-5 top-1/2 grid h-16 w-16 -translate-y-1/2 place-items-center rounded-full bg-[#FFC928]/12 text-[#FFC928]">
-        <Gift size={32} />
+      <div className="absolute right-5 top-1/2 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-[#FFC928]/12 text-[#FFC928] md:h-16 md:w-16">
+        <Gift size={30} />
       </div>
     </section>
   );
@@ -118,15 +117,15 @@ function ReferralLinkCard({
 }) {
   return (
     <section className="rounded-2xl border border-white/10 bg-[#10131A] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <h2 className="mb-4 text-base font-bold text-white">Your Referral Link</h2>
+      <h2 className="mb-4 text-sm font-bold text-white md:text-base">Your Referral Link</h2>
 
-      <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-        <div className="flex min-h-12 items-center gap-3 rounded-2xl border border-white/10 bg-[#0D1118] px-4 py-3">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-[#0D1118] px-4 py-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#FFC928]/10 text-[#FFC928] lg:hidden">
-            <LinkIcon size={19} />
+            <LinkIcon size={18} />
           </span>
 
-          <p className="min-w-0 break-all text-sm leading-6 text-white">
+          <p className="min-w-0 break-all text-xs leading-5 text-white lg:truncate lg:break-normal lg:whitespace-nowrap">
             {referralLink || "Connect wallet to generate link"}
           </p>
 
@@ -137,7 +136,7 @@ function ReferralLinkCard({
             className="hidden shrink-0 text-[#A4AAB7] hover:text-[#FFC928] disabled:cursor-not-allowed disabled:opacity-40 lg:block"
             aria-label="Copy referral link"
           >
-            <Copy size={18} />
+            <Copy size={16} />
           </button>
         </div>
 
@@ -145,9 +144,9 @@ function ReferralLinkCard({
           type="button"
           onClick={onCopy}
           disabled={!referralLink}
-          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#FFC928] px-6 text-sm font-black text-[#05070B] hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#FFC928] px-5 text-xs font-black text-[#05070B] hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
         >
-          <Copy size={18} />
+          <Copy size={17} />
           {copied ? "Copied!" : "Copy Referral Link"}
         </button>
       </div>
@@ -167,14 +166,14 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-[132px] flex-col items-center justify-center rounded-2xl bg-[#10131A] p-4 text-center lg:min-h-[126px] lg:rounded-none lg:first:rounded-l-2xl lg:last:rounded-r-2xl">
-      <div className="grid h-14 w-14 place-items-center rounded-full bg-[#FFC928]/10 text-[#FFC928]">
+    <div className="flex min-h-[120px] flex-col items-center justify-center rounded-2xl bg-[#10131A] p-4 text-center lg:min-h-[116px] lg:rounded-none lg:first:rounded-l-2xl lg:last:rounded-r-2xl">
+      <div className="grid h-12 w-12 place-items-center rounded-full bg-[#FFC928]/10 text-[#FFC928] md:h-14 md:w-14">
         {icon}
       </div>
 
-      <p className="mt-4 text-sm text-[#A4AAB7]">{title}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
-      <p className="mt-1 text-xs text-[#A4AAB7]">{subtitle}</p>
+      <p className="mt-3 text-xs text-[#A4AAB7] md:text-sm">{title}</p>
+      <p className="mt-2 text-xl font-black text-white md:text-2xl">{value}</p>
+      <p className="mt-1 text-[11px] text-[#A4AAB7] md:text-xs">{subtitle}</p>
     </div>
   );
 }
@@ -195,14 +194,14 @@ function StatsSection({
           title="Referral Count"
           value={loading ? "..." : referralCount.toLocaleString()}
           subtitle="Total users joined"
-          icon={<Users size={28} />}
+          icon={<Users size={26} />}
         />
 
         <StatCard
           title="Earned"
           value={loading ? "..." : `${formatRich(earnedRich)} RIC`}
           subtitle="Total rewards earned"
-          icon={<TrendingUp size={28} className="text-[#19C46B]" />}
+          icon={<TrendingUp size={26} className="text-[#19C46B]" />}
         />
       </div>
     </section>
@@ -213,19 +212,19 @@ const steps = [
   {
     title: "Step 1",
     text: "Share your referral link with friends",
-    icon: <Share2 size={22} />,
+    icon: <Share2 size={20} />,
     color: "text-[#FFC928] bg-[#FFC928]/10",
   },
   {
     title: "Step 2",
     text: "They sign up and buy RichCoin",
-    icon: <UserPlus size={22} />,
+    icon: <Users size={20} />,
     color: "text-[#1250FF] bg-[#1250FF]/10",
   },
   {
     title: "Step 3",
     text: "You earn 5% in RIC rewards",
-    icon: <Gift size={22} />,
+    icon: <Gift size={20} />,
     color: "text-[#19C46B] bg-[#19C46B]/10",
   },
 ];
@@ -233,21 +232,21 @@ const steps = [
 function HowItWorks() {
   return (
     <section className="rounded-2xl border border-white/10 bg-[#10131A] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <h2 className="mb-5 text-base font-black text-white">How it Works</h2>
+      <h2 className="mb-5 text-sm font-black text-white md:text-base">How it Works</h2>
 
       <div className="grid gap-0 lg:block">
         {steps.map((step, index) => (
           <div
             key={step.title}
-            className="relative grid grid-cols-[48px_1fr] gap-4 pb-6 last:pb-0 lg:grid-cols-[44px_1fr]"
+            className="relative grid grid-cols-[44px_1fr] gap-3 pb-6 last:pb-0 lg:grid-cols-[42px_1fr]"
           >
             {index !== steps.length - 1 ? (
-              <div className="absolute left-6 top-12 hidden h-[calc(100%-40px)] border-l border-dashed border-white/20 lg:block" />
+              <div className="absolute left-[22px] top-11 hidden h-[calc(100%-34px)] border-l border-dashed border-white/20 lg:block" />
             ) : null}
 
             <span
               className={[
-                "grid h-12 w-12 place-items-center rounded-full",
+                "grid h-11 w-11 place-items-center rounded-full",
                 step.color,
               ].join(" ")}
             >
@@ -255,59 +254,27 @@ function HowItWorks() {
             </span>
 
             <div>
-              <p className="text-sm font-black text-[#FFC928]">{step.title}</p>
-              <p className="mt-1 text-sm leading-5 text-[#D4D8E2]">{step.text}</p>
+              <p className="text-xs font-black text-[#FFC928] md:text-sm">{step.title}</p>
+              <p className="mt-1 text-xs leading-5 text-[#D4D8E2] md:text-sm">
+                {step.text}
+              </p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-5 flex gap-4 rounded-2xl border border-[#FFC928]/20 bg-[#FFC928]/5 p-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#FFC928]/10 text-[#FFC928]">
-          <ShieldCheck size={26} />
+      <div className="mt-5 flex gap-3 rounded-2xl border border-[#FFC928]/20 bg-[#FFC928]/5 p-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#FFC928]/10 text-[#FFC928]">
+          <ShieldCheck size={24} />
         </span>
 
         <div>
-          <p className="text-sm font-black text-[#FFC928]">Transparent & Secure</p>
-          <p className="mt-1 text-sm leading-6 text-[#D4D8E2]">
+          <p className="text-xs font-black text-[#FFC928] md:text-sm">Transparent & Secure</p>
+          <p className="mt-1 text-xs leading-5 text-[#D4D8E2] md:text-sm md:leading-6">
             All referrals and rewards are tracked on-chain and distributed
             automatically.
           </p>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function ReferralHistory({ referralLink, onCopy }: { referralLink: string; onCopy: () => void }) {
-  return (
-    <section className="hidden rounded-2xl border border-white/10 bg-[#10131A] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] lg:block">
-      <h2 className="text-base font-black text-white">Referral History</h2>
-
-      <div className="mt-5 grid grid-cols-5 border-b border-white/10 pb-3 text-xs text-[#A4AAB7]">
-        <span>User</span>
-        <span>Date Joined</span>
-        <span>Amount Bought (RIC)</span>
-        <span>Your Reward (5%)</span>
-        <span>Status</span>
-      </div>
-
-      <div className="flex min-h-[190px] flex-col items-center justify-center text-center">
-        <FolderOpen size={54} className="text-[#3A4150]" />
-        <p className="mt-4 text-base font-black text-white">No referrals yet</p>
-        <p className="mt-1 text-sm text-[#A4AAB7]">
-          Share your link and start earning rewards.
-        </p>
-
-        <button
-          type="button"
-          onClick={onCopy}
-          disabled={!referralLink}
-          className="mt-5 flex h-10 items-center gap-2 rounded-xl border border-[#FFC928]/40 px-4 text-sm font-bold text-[#FFC928] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Share2 size={16} />
-          Share Referral Link
-        </button>
       </div>
     </section>
   );
@@ -412,8 +379,6 @@ export default function ReferralPage() {
           <div className="lg:hidden">
             <HowItWorks />
           </div>
-
-          <ReferralHistory referralLink={referralLink} onCopy={copyLink} />
         </section>
 
         <aside className="hidden lg:block">
