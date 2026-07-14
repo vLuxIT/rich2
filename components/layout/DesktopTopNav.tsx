@@ -1,7 +1,7 @@
 import { Bell, Settings } from "lucide-react";
 
-import WalletButton from "@/components/wallet/WalletButton";
 import RicTopPricePill from "@/components/market/RicTopPricePill";
+import WalletButton from "@/components/wallet/WalletButton";
 
 function PricePill({
   icon,
@@ -46,11 +46,17 @@ export default function DesktopTopNav() {
         <div className="flex items-center gap-3">
           <WalletButton />
 
-          <button className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-[#10131A] text-white">
+          <button
+            type="button"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-[#10131A] text-white"
+          >
             <Bell size={18} />
           </button>
 
-          <button className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-[#10131A] text-white">
+          <button
+            type="button"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-[#10131A] text-white"
+          >
             <Settings size={18} />
           </button>
         </div>
