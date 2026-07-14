@@ -7,9 +7,9 @@ import { useEffect, useState } from "react";
 
 const slides = [
   "/slide.png",
- "/slide2.png",
- "/slide3.png",
- "/slide4.png",
+  "/slide2.png",
+  "/slide3.png",
+  "/slide4.png",
 ];
 
 // Replace this later if you have a cleaner transparent coin/hero image.
@@ -32,13 +32,16 @@ export default function HeroSlider() {
       <section className="relative hidden h-[255px] overflow-hidden rounded-2xl border border-white/10 bg-[#0B0E14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:block">
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,201,40,0.08),transparent_58%)]" />
         <div className="absolute right-0 top-0 h-full w-[45%] bg-[radial-gradient(circle_at_80%_50%,rgba(255,201,40,0.14),transparent_45%)]" />
+
         <div className="absolute -right-10 top-[34%] h-[2px] w-[460px] rotate-[-17deg] bg-gradient-to-r from-transparent via-[#FFC928]/45 to-transparent blur-[1px]" />
         <div className="absolute -right-8 top-[50%] h-[2px] w-[430px] rotate-[-7deg] bg-gradient-to-r from-transparent via-[#FFC928]/35 to-transparent blur-[1px]" />
         <div className="absolute -right-8 top-[65%] h-[2px] w-[420px] rotate-[8deg] bg-gradient-to-r from-transparent via-[#FFC928]/35 to-transparent blur-[1px]" />
 
         <div className="relative z-10 grid h-full grid-cols-[1fr_350px] items-center gap-6 px-9 py-8">
           <div>
-            <p className="text-2xl font-bold leading-none text-white">Welcome to</p>
+            <p className="text-2xl font-bold leading-none text-white">
+              Welcome to
+            </p>
 
             <h1 className="mt-2 text-4xl font-black leading-none text-white">
               <span className="text-[#FFC928]">Richlance</span> DEX
@@ -75,8 +78,12 @@ export default function HeroSlider() {
       </section>
 
       {/* Mobile slider */}
-      <section className="relative aspect-[2.42/1] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0B0E14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:hidden">
-        <Link href="/exchange" aria-label="Explore Richlance DEX" className="absolute inset-0">
+      <section className="relative aspect-[2.18/1] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0B0E14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:hidden">
+        <Link
+          href="/exchange"
+          aria-label="Explore Richlance DEX"
+          className="absolute inset-0"
+        >
           {slides.map((slide, index) => (
             <Image
               key={slide}
@@ -86,7 +93,7 @@ export default function HeroSlider() {
               priority={index === 0}
               sizes="100vw"
               className={[
-                "object-contain transition-opacity duration-700",
+                "object-cover object-center transition-opacity duration-700",
                 activeSlide === index ? "opacity-100" : "opacity-0",
               ].join(" ")}
             />
