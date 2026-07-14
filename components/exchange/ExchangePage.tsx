@@ -5,7 +5,6 @@ import {
   ArrowRight,
   BarChart3,
   CircleDollarSign,
-  History,
   LockKeyhole,
   ShieldCheck,
   Zap,
@@ -13,6 +12,7 @@ import {
 
 import RicDashboardMarketCard from "@/components/market/RicDashboardMarketCard";
 import RicLiquidityPoolCard from "@/components/market/RicLiquidityPoolCard";
+import { formatPercent, formatUsd, useRicMarket } from "@/hooks/useRicMarket";
 import SwapCard from "./SwapCard";
 
 const benefits = [
@@ -38,40 +38,8 @@ const benefits = [
   },
 ];
 
-const popularPairs = [
-  {
-    pair: "RIC / USDT",
-    volume: "Volume $186.72K",
-    price: "0.04235",
-    change: "+5.62%",
-    chart: "green",
-    icons: ["ric", "usdt"],
-  },
-  {
-    pair: "RST / USDT",
-    volume: "Volume $95.43K",
-    price: "1.000",
-    change: "+1.35%",
-    chart: "blue",
-    icons: ["rst", "usdt"],
-  },
-  {
-    pair: "RIC / RST",
-    volume: "Volume $42.18K",
-    price: "0.0421",
-    change: "+3.21%",
-    chart: "purple",
-    icons: ["ric", "rst"],
-  },
-];
-
-function MiniChart({ variant }: { variant: "green" | "blue" | "purple" }) {
-  const stroke =
-    variant === "green"
-      ? "#19C46B"
-      : variant === "blue"
-        ? "#1749E8"
-        : "#8B5CF6";
+function MiniChart({ variant }: { variant: "green" | "blue" }) {
+  const stroke = variant === "green" ? "#19C46B" : "#1749E8";
 
   return (
     <svg viewBox="0 0 160 54" className="h-10 w-full">
@@ -154,7 +122,7 @@ function CoinsIcon() {
   );
 }
 
-function PairIcon({ type }: { type: string }) {
+function PairIcon({ type }: { type: "ric" | "usdt" | "rst" }) {
   if (type === "usdt") {
     return (
       <span className="relative grid h-8 w-8 place-items-center rounded-full bg-[#18B96F]">
@@ -178,7 +146,75 @@ function PairIcon({ type }: { type: string }) {
   );
 }
 
-function PopularPairsPanel({ mobile = false }: { mobile?: boolean }) {
+function PairIcons({ first, second }: { first: "ric" | "usdt" | "rst"; second: "ric" | "usdt" | "rst" }) {
+  return (
+    <div className="relative mr-3 flex w-12 shrink-0 items-center">
+      <PairIcon type={first} />
+      <span className="absolute left-5">
+        <PairIcon type={second} />
+      </span>
+    </div>
+  );
+}
+
+function RicUsdtPopularRow() {
+  const { data, isLoading } = useRicMarket();
+
+  const change = data?.change24h ?? 0;
+  const isPositive = change >= 0;
+
+  return (
+    <div className="grid grid-cols-[1fr_auto_88px] items-center gap-3 py-3 first:pt-0 last:pb-0">
+      <div className="flex min-w-0 items-center">
+        <PairIcons first="ric" second="usdt" />
+
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-white">RIC / USDT</p>
+          <p className="truncate text-[11px] text-[#A4AAB7]">
+            Live PancakeSwap pair
+          </p>
+        </div>
+      </div>
+
+      <div className="text-right">
+        <p className="text-sm font-bold text-white">
+          {isLoading && !data ? "Loading..." : formatUsd(data?.priceUsd).replace("$", "")}
+        </p>
+        <p className={["text-xs font-semibold", isPositive ? "text-[#19C46B]" : "text-[#EF4444]"].join(" ")}>
+          {formatPercent(change)}
+        </p>
+      </div>
+
+      <MiniChart variant="green" />
+    </div>
+  );
+}
+
+function RstUsdtPopularRow() {
+  return (
+    <div className="grid grid-cols-[1fr_auto_88px] items-center gap-3 py-3 first:pt-0 last:pb-0">
+      <div className="flex min-w-0 items-center">
+        <PairIcons first="rst" second="usdt" />
+
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-white">RST / USDT</p>
+          <p className="truncate text-[11px] text-[#A4AAB7]">
+            Volume $95.43K
+          </p>
+        </div>
+      </div>
+
+      <div className="text-right">
+        <p className="text-sm font-bold text-white">1.000</p>
+        <p className="text-xs font-semibold text-[#19C46B]">+1.35%</p>
+      </div>
+
+      <MiniChart variant="blue" />
+    </div>
+  );
+}
+
+function PopularPairsPanel() {
   return (
     <section className="rounded-2xl border border-white/10 bg-[#10131A] p-4">
       <div className="mb-4 flex items-center justify-between">
@@ -194,39 +230,8 @@ function PopularPairsPanel({ mobile = false }: { mobile?: boolean }) {
       </div>
 
       <div className="divide-y divide-white/10">
-        {popularPairs.map((pair) => (
-          <div
-            key={pair.pair}
-            className="grid grid-cols-[1fr_auto_88px] items-center gap-3 py-3 first:pt-0 last:pb-0"
-          >
-            <div className="flex min-w-0 items-center">
-              <div className="relative mr-3 flex w-12 shrink-0 items-center">
-                <PairIcon type={pair.icons[0]} />
-                <span className="absolute left-5">
-                  <PairIcon type={pair.icons[1]} />
-                </span>
-              </div>
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-white">
-                  {pair.pair}
-                </p>
-                <p className="truncate text-[11px] text-[#A4AAB7]">
-                  {pair.volume}
-                </p>
-              </div>
-            </div>
-
-            <div className="text-right">
-              <p className="text-sm font-bold text-white">{pair.price}</p>
-              <p className="text-xs font-semibold text-[#19C46B]">
-                {pair.change}
-              </p>
-            </div>
-
-            <MiniChart variant={pair.chart as "green" | "blue" | "purple"} />
-          </div>
-        ))}
+        <RicUsdtPopularRow />
+        <RstUsdtPopularRow />
       </div>
     </section>
   );
@@ -269,23 +274,13 @@ export default function ExchangePage() {
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <section className="min-w-0 space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black text-white md:text-3xl">
-                Exchange
-              </h1>
-              <p className="mt-1 text-sm text-[#A4AAB7] md:text-base">
-                Trade tokens instantly and securely
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-[#10131A] px-4 text-sm font-bold text-white transition hover:border-[#FFC928]/40"
-            >
-              <History size={18} />
-              <span className="hidden sm:inline">History</span>
-            </button>
+          <div>
+            <h1 className="text-2xl font-black text-white md:text-3xl">
+              Exchange
+            </h1>
+            <p className="mt-1 text-sm text-[#A4AAB7] md:text-base">
+              Trade tokens instantly and securely
+            </p>
           </div>
 
           <div className="w-full">
@@ -319,7 +314,7 @@ export default function ExchangePage() {
           </section>
 
           <div className="lg:hidden">
-            <PopularPairsPanel mobile />
+            <PopularPairsPanel />
           </div>
         </section>
 

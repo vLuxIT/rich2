@@ -406,10 +406,12 @@ export default function SwapCard() {
         />
 
         {receiveAmount && (
-          <div className="mt-4 space-y-2 rounded-[18px] border border-zinc-800 bg-[#090d15] p-3 text-sm">
+          <div className="mt-4 space-y-3 rounded-[22px] border border-[#FFC928]/30 bg-[#171103] p-4 text-sm shadow-[inset_0_0_30px_rgba(255,201,40,0.08)]">
             <div className="flex items-center justify-between">
               <span className="text-zinc-500">Route</span>
-              <span className="text-white">⚡ RichCoinDex</span>
+              <span className="rounded-full border border-[#FFC928]/25 bg-[#FFC928]/10 px-3 py-1.5 font-medium text-[#FFC928]">
+  ⚡ RichCoinDex
+</span>
             </div>
 
             <div className="flex items-center justify-between">
