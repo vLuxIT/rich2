@@ -3,7 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CalendarDays, Clock3, Gift, HelpCircle, LockKeyhole, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Clock3,
+  Gift,
+  HelpCircle,
+  LockKeyhole,
+  TrendingUp,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { formatUnits, parseUnits } from "viem";
@@ -63,7 +72,7 @@ function formatRewardPercent(value?: bigint) {
 }
 
 function InfoDot() {
-  return <HelpCircle size={14} className="text-[#777F91]" />;
+  return <HelpCircle size={13} className="text-[#777F91]" />;
 }
 
 function BigMetricCard({
@@ -78,19 +87,19 @@ function BigMetricCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#10131A] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <div className="flex items-center gap-2 text-sm text-[#A4AAB7]">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#10131A] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:p-5">
+      <div className="flex items-center gap-2 text-xs text-[#A4AAB7] md:text-sm">
         <span>{title}</span>
         <InfoDot />
       </div>
 
-      <p className="mt-4 text-[26px] font-black leading-none text-white md:text-3xl">
+      <p className="mt-3 text-[22px] font-black leading-none text-white md:mt-4 md:text-[26px]">
         {value}
       </p>
 
-      <p className="mt-3 text-sm text-[#A4AAB7]">{subtitle}</p>
+      <p className="mt-2 text-xs text-[#A4AAB7] md:mt-3 md:text-sm">{subtitle}</p>
 
-      <div className="absolute right-5 top-1/2 grid h-16 w-16 -translate-y-1/2 place-items-center rounded-full bg-[#123DDB]/15 text-[#1250FF]">
+      <div className="absolute right-4 top-1/2 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-[#123DDB]/15 text-[#1250FF] md:right-5 md:h-16 md:w-16">
         {icon}
       </div>
     </div>
@@ -113,15 +122,17 @@ function OverviewCell({
   return (
     <div
       className={[
-        "flex min-h-[132px] flex-col items-center justify-center px-3 text-center",
+        "flex min-h-[118px] flex-col items-center justify-center px-2 text-center md:min-h-[126px] md:px-3",
         border ? "border-l border-white/10" : "",
       ].join(" ")}
     >
-      <p className="text-xs text-[#A4AAB7]">{title}</p>
-      <p className="mt-3 text-lg font-black text-white">{value}</p>
-      <p className="mt-2 text-xs leading-4 text-[#A4AAB7]">{note}</p>
+      <p className="text-[10px] text-[#A4AAB7] md:text-xs">{title}</p>
+      <p className="mt-2 text-sm font-black text-white md:mt-3 md:text-base">{value}</p>
+      <p className="mt-1.5 text-[10px] leading-4 text-[#A4AAB7] md:mt-2 md:text-xs">
+        {note}
+      </p>
 
-      <div className="mt-4 grid h-10 w-10 place-items-center rounded-full">
+      <div className="mt-3 grid h-9 w-9 place-items-center rounded-full md:mt-4 md:h-10 md:w-10">
         {icon}
       </div>
     </div>
@@ -145,24 +156,24 @@ function SmallMetricCard({
 }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#10131A] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <div className="flex items-center gap-2 text-sm text-white">
+      <div className="flex items-center gap-2 text-xs text-white md:text-sm">
         <span>{title}</span>
         <InfoDot />
       </div>
 
       <p
         className={[
-          "mt-3 text-2xl font-black",
+          "mt-3 text-xl font-black md:text-2xl",
           green ? "text-[#19C46B]" : "text-[#FFC928]",
         ].join(" ")}
       >
         {value}
       </p>
 
-      <p className="mt-2 text-sm text-[#A4AAB7]">{subtitle}</p>
+      <p className="mt-2 text-xs text-[#A4AAB7] md:text-sm">{subtitle}</p>
 
       {helper ? (
-        <div className="mt-5 border-t border-white/10 pt-3 text-xs text-[#A4AAB7]">
+        <div className="mt-4 border-t border-white/10 pt-3 text-[11px] text-[#A4AAB7] md:mt-5 md:text-xs">
           {helper}
         </div>
       ) : null}
@@ -176,19 +187,19 @@ const featureCards = [
   {
     title: "Secure",
     text: "Your funds are safe with smart contracts",
-    icon: <LockKeyhole size={24} />,
+    icon: <LockKeyhole size={22} />,
     color: "text-[#19C46B] bg-[#19C46B]/10",
   },
   {
     title: "Flexible",
     text: "Choose a plan that suits you",
-    icon: <CalendarDays size={24} />,
+    icon: <CalendarDays size={22} />,
     color: "text-[#1250FF] bg-[#1250FF]/10",
   },
   {
     title: "Easy Withdraw",
     text: "Unstake after the selected duration",
-    icon: <Gift size={24} />,
+    icon: <Gift size={22} />,
     color: "text-[#8B35FF] bg-[#8B35FF]/10",
   },
 ];
@@ -294,10 +305,10 @@ export default function StakingDashboard() {
     rewardPercent: formatRewardPercent(rewardPercents[index]),
   }));
 
-  const activeSelectedPlanId = selectedPlanId ?? plans[0]?.id;
+  const activeSelectedPlanId = selectedPlanId ?? plans[plans.length - 1]?.id;
   const selectedPlan =
     plans.find((plan) => plan.id === activeSelectedPlanId) ||
-    plans[0] ||
+    plans[plans.length - 1] ||
     undefined;
 
   const statsData = stats as readonly bigint[] | undefined;
@@ -482,7 +493,7 @@ export default function StakingDashboard() {
 
   return (
     <div className="space-y-4">
-      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#10131A] px-5 py-5 md:bg-transparent md:p-0 md:border-0">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#10131A] px-5 py-5 md:border-0 md:bg-transparent md:p-0">
         <div className="flex items-start gap-4">
           <Link
             href="/"
@@ -492,10 +503,10 @@ export default function StakingDashboard() {
           </Link>
 
           <div className="min-w-0">
-            <h1 className="text-2xl font-black text-white md:text-3xl">
+            <h1 className="text-xl font-black text-white md:text-2xl">
               Stake RIC
             </h1>
-            <p className="mt-1 max-w-sm text-sm leading-6 text-[#A4AAB7] md:text-base">
+            <p className="mt-1 max-w-sm text-xs leading-5 text-[#A4AAB7] md:text-sm">
               Stake your RichCoin (RIC) and earn high rewards
             </p>
           </div>
@@ -524,11 +535,11 @@ export default function StakingDashboard() {
 
         <section className="rounded-2xl border border-white/10 bg-[#10131A] p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold text-white">My Staking Overview</h2>
+            <h2 className="text-sm font-bold text-white md:text-base">My Staking Overview</h2>
 
             <Link
               href="/user-stakes"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-[#FFC928]"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#FFC928] md:text-sm"
             >
               My Stakes
               <ArrowRight size={15} />
@@ -542,8 +553,8 @@ export default function StakingDashboard() {
               note={`≈ ${formatRIC(activeStakeTotal)} RIC active`}
               border={false}
               icon={
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#19C46B]/15 text-[#19C46B]">
-                  <LockKeyhole size={20} />
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-[#19C46B]/15 text-[#19C46B] md:h-10 md:w-10">
+                  <LockKeyhole size={19} />
                 </span>
               }
             />
@@ -552,8 +563,8 @@ export default function StakingDashboard() {
               value={selectedPlan ? `${selectedPlan.days} Days` : "—"}
               note="Selected plan"
               icon={
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#1250FF]/15 text-[#4B7CFF]">
-                  <CalendarDays size={20} />
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-[#1250FF]/15 text-[#4B7CFF] md:h-10 md:w-10">
+                  <CalendarDays size={19} />
                 </span>
               }
             />
@@ -562,8 +573,8 @@ export default function StakingDashboard() {
               value={`${formatRIC(rewardsReserved)} RIC`}
               note={`≈ ${formatUsd(rewardsReservedUsd)}`}
               icon={
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#8B35FF]/15 text-[#8B35FF]">
-                  <TrendingUp size={20} />
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-[#8B35FF]/15 text-[#8B35FF] md:h-10 md:w-10">
+                  <TrendingUp size={19} />
                 </span>
               }
             />
@@ -572,8 +583,8 @@ export default function StakingDashboard() {
               value="After Lock"
               note="Based on plan"
               icon={
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#F07B13]/15 text-[#F07B13]">
-                  <Clock3 size={20} />
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-[#F07B13]/15 text-[#F07B13] md:h-10 md:w-10">
+                  <Clock3 size={19} />
                 </span>
               }
             />
@@ -589,8 +600,8 @@ export default function StakingDashboard() {
           helper="Earnings are calculated daily"
           green
           icon={
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#19C46B]/15 text-[#19C46B]">
-              <TrendingUp size={30} />
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#19C46B]/15 text-[#19C46B] md:h-14 md:w-14">
+              <TrendingUp size={26} />
             </span>
           }
         />
@@ -601,8 +612,8 @@ export default function StakingDashboard() {
           subtitle={`≈ ${formatUsd(rewardPoolUsd)}`}
           helper="Claim availability depends on your stakes"
           icon={
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#FFC928]/15 text-[#FFC928]">
-              <Gift size={30} />
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#FFC928]/15 text-[#FFC928] md:h-14 md:w-14">
+              <Gift size={26} />
             </span>
           }
         />
@@ -613,7 +624,7 @@ export default function StakingDashboard() {
           subtitle={`≈ ${formatUsd(rewardsDistributedUsd)}`}
           helper="All time rewards distributed"
           icon={
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#8B35FF]/15 text-[#8B35FF]">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#8B35FF]/15 text-[#8B35FF] md:h-14 md:w-14">
               <WalletIcon />
             </span>
           }
@@ -639,7 +650,7 @@ export default function StakingDashboard() {
               >
                 <span
                   className={[
-                    "grid h-12 w-12 shrink-0 place-items-center rounded-full",
+                    "grid h-11 w-11 shrink-0 place-items-center rounded-full",
                     feature.color,
                   ].join(" ")}
                 >
@@ -647,8 +658,8 @@ export default function StakingDashboard() {
                 </span>
 
                 <div>
-                  <p className="text-sm font-bold text-white">{feature.title}</p>
-                  <p className="mt-1 text-xs leading-4 text-[#A4AAB7]">
+                  <p className="text-xs font-bold text-white md:text-sm">{feature.title}</p>
+                  <p className="mt-1 text-[11px] leading-4 text-[#A4AAB7] md:text-xs">
                     {feature.text}
                   </p>
                 </div>
@@ -688,7 +699,7 @@ export default function StakingDashboard() {
           >
             <span
               className={[
-                "grid h-12 w-12 shrink-0 place-items-center rounded-full",
+                "grid h-11 w-11 shrink-0 place-items-center rounded-full",
                 feature.color,
               ].join(" ")}
             >
@@ -696,8 +707,8 @@ export default function StakingDashboard() {
             </span>
 
             <div>
-              <p className="text-sm font-bold text-white">{feature.title}</p>
-              <p className="mt-1 text-xs leading-4 text-[#A4AAB7]">
+              <p className="text-xs font-bold text-white">{feature.title}</p>
+              <p className="mt-1 text-[11px] leading-4 text-[#A4AAB7]">
                 {feature.text}
               </p>
             </div>
@@ -710,7 +721,7 @@ export default function StakingDashboard() {
 
 function CoinsIcon() {
   return (
-    <svg viewBox="0 0 48 48" className="h-11 w-11" fill="none">
+    <svg viewBox="0 0 48 48" className="h-10 w-10 md:h-11 md:w-11" fill="none">
       <ellipse cx="24" cy="11" rx="13" ry="6" stroke="currentColor" strokeWidth="3" />
       <path d="M11 11v18c0 3.3 5.8 6 13 6s13-2.7 13-6V11" stroke="currentColor" strokeWidth="3" />
       <path d="M11 20c0 3.3 5.8 6 13 6s13-2.7 13-6" stroke="currentColor" strokeWidth="3" />
@@ -721,7 +732,7 @@ function CoinsIcon() {
 
 function WalletIcon() {
   return (
-    <svg viewBox="0 0 48 48" className="h-8 w-8" fill="none">
+    <svg viewBox="0 0 48 48" className="h-7 w-7 md:h-8 md:w-8" fill="none">
       <path
         d="M10 15h25a5 5 0 0 1 5 5v14a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z"
         stroke="currentColor"
