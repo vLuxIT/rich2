@@ -1,13 +1,12 @@
 import "./globals.css";
-import { Suspense } from "react";
 
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import BottomNav from "@/components/layout/BottomNav";
-import AppProviders from "@/components/providers/AppProviders";
-import ReferralTracker from "@/components/referral/ReferralTracker";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+
+import AppShell from "@/components/layout/AppShell";
+import AppProviders from "@/components/providers/AppProviders";
+import ReferralTracker from "@/components/referral/ReferralTracker";
 
 export const metadata: Metadata = {
   title: "RichCoin Dex",
@@ -26,26 +25,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#0F1117] text-white">
+      <body className="min-h-screen bg-[#080A10] text-white">
         <AppProviders>
           <Suspense fallback={null}>
             <ReferralTracker />
           </Suspense>
 
-          <div className="flex min-h-screen flex-col">
-            <Header />
-
-            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 pb-24 md:pb-6">
-              {children}
-            </main>
-
-            <div className="md:hidden">
-              <BottomNav />
-            </div>
-
-            <Footer />
-          </div>
+          <AppShell>{children}</AppShell>
         </AppProviders>
+
         <Toaster richColors position="top-center" closeButton />
       </body>
     </html>

@@ -1,5 +1,5 @@
-import ExchangePage from "@/components/exchange/ExchangePage";
+import HomeDashboard from "@/components/dashboard/HomeDashboard";
 
-export default function Home() {
-  return <ExchangePage />;
+export default function HomePage() {
+  return <HomeDashboard />;
 }
