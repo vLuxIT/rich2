@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 
 import RicDashboardMarketCard from "@/components/market/RicDashboardMarketCard";
-import HeroSlider from "./HeroSlider";
 import RicLiquidityPoolCard from "@/components/market/RicLiquidityPoolCard";
+import HeroSlider from "./HeroSlider";
 
 const actionCards = [
   {
@@ -112,30 +112,30 @@ function TokenIcon({ type }: { type: string }) {
     return (
       <div
         className={[
-          "relative grid h-[70px] w-[70px] shrink-0 place-items-center rounded-full md:h-14 md:w-14",
+          "relative grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full md:h-14 md:w-14",
           type === "usdt-buy" ? "bg-[#18B96F]" : "bg-[#DF2D37]",
         ].join(" ")}
       >
         <Image
           src="/usdt.png"
           alt="USDT"
-          width={42}
-          height={42}
-          className="object-contain"
+          width={34}
+          height={34}
+          className="object-contain md:h-[42px] md:w-[42px]"
         />
-        <span className="absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-[#10131A] bg-white/25" />
+        <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#10131A] bg-white/25 md:h-4 md:w-4" />
       </div>
     );
   }
 
   if (type === "ric") {
     return (
-      <div className="relative grid h-[70px] w-[70px] shrink-0 place-items-center rounded-full border border-[#FFC928]/70 bg-[#FFC928]/10 md:h-14 md:w-14">
+      <div className="relative grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full border border-[#FFC928]/70 bg-[#FFC928]/10 md:h-14 md:w-14">
         <Image
           src="/rc.png"
           alt="RIC"
           fill
-          sizes="70px"
+          sizes="58px"
           className="object-contain p-1"
         />
       </div>
@@ -144,7 +144,7 @@ function TokenIcon({ type }: { type: string }) {
 
   if (type === "rst") {
     return (
-      <div className="grid h-[70px] w-[70px] shrink-0 place-items-center rounded-full bg-[#123DDB] text-[23px] font-black text-white md:h-14 md:w-14 md:text-lg">
+      <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[#123DDB] text-[20px] font-black text-white md:h-14 md:w-14 md:text-lg">
         RST
       </div>
     );
@@ -152,15 +152,15 @@ function TokenIcon({ type }: { type: string }) {
 
   if (type === "liquidity") {
     return (
-      <div className="grid h-[70px] w-[70px] shrink-0 place-items-center rounded-full bg-[#6B32D8] text-white md:h-14 md:w-14">
-        <Droplets size={32} />
+      <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[#6B32D8] text-white md:h-14 md:w-14">
+        <Droplets size={28} className="md:h-8 md:w-8" />
       </div>
     );
   }
 
   return (
-    <div className="grid h-[70px] w-[70px] shrink-0 place-items-center rounded-full bg-[#F07B13] text-white md:h-14 md:w-14">
-      <Users size={32} />
+    <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[#F07B13] text-white md:h-14 md:w-14">
+      <Users size={28} className="md:h-8 md:w-8" />
     </div>
   );
 }
@@ -182,16 +182,16 @@ function ActionCard({ card }: { card: (typeof actionCards)[number] }) {
   return (
     <Link
       href={card.href}
-      className="group flex min-h-[148px] flex-col items-center justify-center rounded-xl border border-white/10 bg-[#10131A] p-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-[#FFC928]/40 md:min-h-[86px] md:flex-row md:justify-between md:p-4 md:text-left"
+      className="group flex min-h-[126px] flex-col items-center justify-center rounded-xl border border-white/10 bg-[#10131A] p-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-[#FFC928]/40 md:min-h-[86px] md:flex-row md:justify-between md:p-4 md:text-left"
     >
-      <div className="flex flex-col items-center gap-2.5 md:flex-row md:gap-3">
+      <div className="flex flex-col items-center gap-2 md:flex-row md:gap-3">
         <TokenIcon type={card.type} />
 
         <div>
-          <h3 className="text-[17px] font-bold leading-tight text-white md:text-base">
+          <h3 className="text-[14px] font-bold leading-[1.15] text-white md:text-base">
             {card.title}
           </h3>
-          <p className="mt-1.5 text-[13px] leading-5 text-[#A4AAB7] md:mt-1 md:text-xs">
+          <p className="mt-1 text-[11px] leading-4 text-[#A4AAB7] md:mt-1 md:text-xs">
             {card.subtitle}
           </p>
         </div>
