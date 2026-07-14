@@ -6,10 +6,10 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const slides = [
-  "/images/slider/slide-1.png",
-  "/images/slider/slide-2.png",
-  "/images/slider/slide-3.png",
-  "/images/slider/slide-4.png",
+  "/slide.png",
+ "/slide2.png",
+ "/slide3.png",
+ "/slide4.png",
 ];
 
 // Replace this later if you have a cleaner transparent coin/hero image.
