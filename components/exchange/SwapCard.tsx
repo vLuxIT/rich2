@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   useAccount,
@@ -60,14 +60,12 @@ function formatQuote(value: string | number) {
 export default function SwapCard() {
   const { address } = useAccount();
 
-  const [payToken, setPayToken] = useState<SwapToken>(USDT_TOKEN);
-  const [receiveToken, setReceiveToken] = useState<SwapToken>(RICH_TOKEN);
+  const [payToken, setPayToken] = useState(USDT_TOKEN);
+  const [receiveToken, setReceiveToken] = useState(RICH_TOKEN);
   const [payAmount, setPayAmount] = useState("");
-
   const [showSettings, setShowSettings] = useState(false);
   const [slippage, setSlippage] = useState("5.0");
   const [deadlineMinutes, setDeadlineMinutes] = useState("10");
-
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const [showTxModal, setShowTxModal] = useState(false);
   const [txType, setTxType] = useState<"approve" | "swap">("swap");
@@ -120,9 +118,11 @@ export default function SwapCard() {
     },
   });
 
+  const quoteAmounts = quoteData as readonly bigint[] | undefined;
+
   const receiveAmount =
-    quoteData && quoteData.length > 1
-      ? formatUnits(quoteData[quoteData.length - 1], receiveToken.decimals)
+    quoteAmounts && quoteAmounts.length > 1
+      ? formatUnits(quoteAmounts[quoteAmounts.length - 1], receiveToken.decimals)
       : "";
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -139,155 +139,153 @@ export default function SwapCard() {
     amountIn && allowance !== undefined && allowance < amountIn
   );
 
-async function executeSwap() {
-  try {
-    if (!address || !amountIn || !quoteData || quoteData.length < 2) {
-      return;
+  const executeSwap = useCallback(async () => {
+    try {
+      if (!address || !amountIn || !quoteAmounts || quoteAmounts.length < 2) {
+        return;
+      }
+
+      setReferralRecorded(false);
+      setTxHash(undefined);
+      setTxType("swap");
+
+      const outputAmount = quoteAmounts[quoteAmounts.length - 1];
+      const slippageBps = BigInt(Math.floor(Number(slippage) * 100));
+      const bps = BigInt(10000);
+
+      const isSellingRich =
+        payToken.symbol === "RIC" && receiveToken.symbol === "USDT";
+
+      const amountOutMin = isSellingRich
+        ? BigInt(0)
+        : (outputAmount * (bps - slippageBps)) / bps;
+
+      const deadline = BigInt(
+        Math.floor(Date.now() / 1000) + Number(deadlineMinutes || "20") * 60
+      );
+
+      const hash = await writeContractAsync({
+        abi: pancakeV2RouterAbi,
+        address: PANCAKE_V2_ROUTER,
+        functionName: isSellingRich
+          ? "swapExactTokensForTokensSupportingFeeOnTransferTokens"
+          : "swapExactTokensForTokens",
+        args: [amountIn, amountOutMin, path, address, deadline],
+      });
+
+      setTxHash(hash);
+      setShowTxModal(true);
+    } catch (error) {
+      console.error("Swap failed:", error);
     }
-setReferralRecorded(false);
-    setTxHash(undefined);
-    setTxType("swap");
-
-    const outputAmount = quoteData[quoteData.length - 1];
-
-    const slippageBps = BigInt(Math.floor(Number(slippage) * 100));
-    const bps = BigInt(10000);
-
-    const isSellingRich =
-      payToken.symbol === "RIC" &&
-      receiveToken.symbol === "USDT";
-
-    const amountOutMin = isSellingRich
-      ? BigInt(0)
-      : (outputAmount * (bps - slippageBps)) / bps;
-
-    const deadline = BigInt(
-      Math.floor(Date.now() / 1000) +
-        Number(deadlineMinutes || "20") * 60
-    );
-
-    const hash = await writeContractAsync({
-      abi: pancakeV2RouterAbi,
-      address: PANCAKE_V2_ROUTER,
-      functionName: isSellingRich
-        ? "swapExactTokensForTokensSupportingFeeOnTransferTokens"
-        : "swapExactTokensForTokens",
-      args: [amountIn, amountOutMin, path, address, deadline],
-    });
-
-    setTxHash(hash);
-    setShowTxModal(true);
-  } catch (error) {
-    console.error("Swap failed:", error);
-  }
-}
+  }, [
+    address,
+    amountIn,
+    quoteAmounts,
+    slippage,
+    payToken.symbol,
+    receiveToken.symbol,
+    deadlineMinutes,
+    writeContractAsync,
+    path,
+  ]);
 
   useEffect(() => {
     if (!isTxSuccess || !txHash) return;
 
     let cancelled = false;
 
-  async function handleConfirmedTx() {
-  await refetchAllowance();
+    async function handleConfirmedTx() {
+      await refetchAllowance();
 
-  if (txType === "approve") {
-    if (!autoSwapStarted && !cancelled) {
-      console.log("Approval confirmed. Starting swap...");
-      setAutoSwapStarted(true);
-      await executeSwap();
+      if (txType === "approve") {
+        if (!autoSwapStarted && !cancelled) {
+          console.log("Approval confirmed. Starting swap...");
+          setAutoSwapStarted(true);
+          await executeSwap();
+        }
+
+        return;
+      }
+
+      if (txType !== "swap") {
+        console.log("Skipping referral: txType is not swap");
+        return;
+      }
+
+      if (referralRecorded) {
+        console.log("Skipping referral: already recorded");
+        return;
+      }
+
+      if (!address) {
+        console.log("Skipping referral: no wallet address");
+        return;
+      }
+
+      const pendingReferrer = localStorage.getItem("richcoin_pending_referrer");
+
+      console.log("Pending referrer:", pendingReferrer);
+      console.log("Buyer:", address);
+      console.log("Swap txHash:", txHash);
+      console.log("Pay token:", payToken.symbol);
+      console.log("Receive token:", receiveToken.symbol);
+
+      if (!pendingReferrer) {
+        console.log("Skipping referral: no pending referrer");
+        return;
+      }
+
+      const isBuySwap =
+        payToken.symbol === "USDT" && receiveToken.symbol === "RIC";
+
+      console.log("isBuySwap:", isBuySwap);
+
+      if (!isBuySwap) {
+        console.log("Skipping referral: not a USDT → RIC buy");
+        return;
+      }
+
+      if (pendingReferrer.toLowerCase() === address.toLowerCase()) {
+        console.log("Skipping referral: self-referral");
+        return;
+      }
+
+      try {
+        console.log("Sending referral record request...");
+
+        const response = await fetch("/api/referral/record", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            buyer: address,
+            referrer: pendingReferrer,
+            txHash,
+            amountRich: receiveAmount,
+          }),
+        });
+
+        const result = await response.json();
+
+        console.log("Referral API status:", response.status);
+        console.log("Referral API response:", result);
+
+        if (!response.ok) {
+          console.error("Referral API failed:", response.status, result);
+          return;
+        }
+
+        console.log("Referral recorded successfully");
+
+        if (!cancelled) {
+          setReferralRecorded(true);
+        }
+      } catch (error) {
+        console.error("Failed to record referral:", error);
+      }
     }
-
-    return;
-  }
-
-  if (txType !== "swap") {
-    console.log("Skipping referral: txType is not swap");
-    return;
-  }
-
-  if (referralRecorded) {
-    console.log("Skipping referral: already recorded");
-    return;
-  }
-
-  if (!address) {
-    console.log("Skipping referral: no wallet address");
-    return;
-  }
-
-  const pendingReferrer = localStorage.getItem(
-    "richcoin_pending_referrer"
-  );
-
-  console.log("Pending referrer:", pendingReferrer);
-  console.log("Buyer:", address);
-  console.log("Swap txHash:", txHash);
-  console.log("Pay token:", payToken.symbol);
-  console.log("Receive token:", receiveToken.symbol);
-
-  if (!pendingReferrer) {
-    console.log("Skipping referral: no pending referrer");
-    return;
-  }
-
-  const isBuySwap =
-    payToken.symbol === "USDT" &&
-    receiveToken.symbol === "RIC";
-
-  console.log("isBuySwap:", isBuySwap);
-
-  if (!isBuySwap) {
-    console.log("Skipping referral: not a USDT → RIC buy");
-    return;
-  }
-
-  if (
-    pendingReferrer.toLowerCase() ===
-    address.toLowerCase()
-  ) {
-    console.log("Skipping referral: self-referral");
-    return;
-  }
-
-  try {
-    console.log("Sending referral record request...");
-
-    const response = await fetch("/api/referral/record", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        buyer: address,
-        referrer: pendingReferrer,
-        txHash,
-        amountRich: receiveAmount,
-      }),
-    });
-
-    const result = await response.json();
-
-    console.log("Referral API status:", response.status);
-    console.log("Referral API response:", result);
-
-    if (!response.ok) {
-      console.error(
-        "Referral API failed:",
-        response.status,
-        result
-      );
-      return;
-    }
-
-    console.log("Referral recorded successfully");
-
-    if (!cancelled) {
-      setReferralRecorded(true);
-    }
-  } catch (error) {
-    console.error("Failed to record referral:", error);
-  }
-}
 
     void handleConfirmedTx();
 
@@ -305,6 +303,7 @@ setReferralRecorded(false);
     receiveToken.symbol,
     receiveAmount,
     refetchAllowance,
+    executeSwap,
   ]);
 
   useEffect(() => {
@@ -312,7 +311,6 @@ setReferralRecorded(false);
 
     const timeout = setTimeout(() => {
       setShowTxModal(false);
-
       alert(
         "Transaction is taking longer than expected. It may still confirm later. Please check your wallet or BscScan."
       );
@@ -394,20 +392,20 @@ setReferralRecorded(false);
           }
         />
 
-        <div className="relative z-50 my-2 flex justify-center">
+        <div className="my-3 flex justify-center">
           <button
             type="button"
             onClick={switchTokens}
-            className="flex h-10 w-10 items-center justify-center rounded-full border-4 border-[#10141d] bg-[#202838] text-zinc-300 hover:bg-[#2a3448]"
+            className="rounded-full border border-zinc-700 bg-[#171c27] p-3 text-yellow-400 hover:bg-[#202838]"
           >
-            <ArrowDownUp size={16} />
+            <ArrowDownUp size={18} />
           </button>
         </div>
 
         <TokenBox
           label="You receive"
           token={receiveToken}
-          amount={receiveAmount ? formatQuote(receiveAmount) : ""}
+          amount={receiveAmount}
           setAmount={() => {}}
           balance={receiveTokenBalance?.formatted}
           disabled
@@ -421,20 +419,15 @@ setReferralRecorded(false);
         />
 
         {receiveAmount && (
-          <div className="mt-4 rounded-[18px] border border-yellow-700/40 bg-gradient-to-br from-[#1c1708] via-[#15110a] to-[#0f0f0f] p-4 text-sm">
+          <div className="mt-4 space-y-2 rounded-[18px] border border-zinc-800 bg-[#090d15] p-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-zinc-500">Route</span>
-
-              <span className="flex items-center gap-1 rounded-full border border-yellow-600/20 bg-yellow-500/10 px-3 py-1 text-sm font-medium text-yellow-400">
-              ⚡
-                RichCoinDex
-              </span>
+              <span className="text-white">⚡ RichCoinDex</span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-zinc-500">Rate</span>
-
-              <span className="text-zinc-300">
+              <span className="text-white">
                 1 {payToken.symbol} ={" "}
                 {numericPayAmount > 0
                   ? formatQuote(Number(receiveAmount) / numericPayAmount)
@@ -443,22 +436,19 @@ setReferralRecorded(false);
               </span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-zinc-500">Slippage</span>
-
-              <span className="text-yellow-400">{slippage}%</span>
+              <span className="text-white">{slippage}%</span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-zinc-500">Deadline</span>
-
-              <span className="text-zinc-300">{deadlineMinutes} mins</span>
+              <span className="text-white">{deadlineMinutes} mins</span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-zinc-500">LP Fee</span>
-
-              <span className="text-zinc-300">0.25%</span>
+              <span className="text-white">0.25%</span>
             </div>
           </div>
         )}
@@ -468,7 +458,7 @@ setReferralRecorded(false);
           onClick={() => setShowSettings(true)}
           className="mt-4 flex w-full items-center justify-between text-sm"
         >
-          <span className="text-zinc-400">Slippage Tolerance</span>
+          <span className="text-zinc-500">Slippage Tolerance</span>
           <span className="font-medium text-yellow-400">{slippage}%</span>
         </button>
 
@@ -662,6 +652,19 @@ function TokenBox({
   showMax?: boolean;
   onMax?: () => void;
 }) {
+  const numericBalance = Number(balance || 0);
+
+  function setPercentAmount(percent: number) {
+    if (!balance || numericBalance <= 0 || disabled) return;
+
+    const value = numericBalance * percent;
+    const decimals = Math.min(token.decimals, 8);
+
+    const formattedValue = value.toFixed(decimals).replace(/\.?0+$/, "");
+
+    setAmount(formattedValue);
+  }
+
   return (
     <div className="rounded-[18px] bg-[#090d15] p-3">
       <div className="mb-4 flex items-center justify-between text-zinc-500">
@@ -669,16 +672,6 @@ function TokenBox({
 
         <div className="flex items-center gap-2 text-xs">
           <span>Balance: {balance ? formatNumber(balance) : "0.0000"}</span>
-
-          {showMax && balance && Number(balance) > 0 && (
-            <button
-              type="button"
-              onClick={onMax}
-              className="rounded-full bg-yellow-400/10 px-2 py-0.5 text-[10px] font-semibold text-yellow-400 hover:bg-yellow-400/20"
-            >
-              MAX
-            </button>
-          )}
         </div>
       </div>
 
@@ -694,9 +687,7 @@ function TokenBox({
             className="w-full bg-transparent text-[26px] font-semibold text-white outline-none disabled:cursor-not-allowed"
           />
 
-          {estimate && (
-            <p className="mt-1 text-xs text-zinc-500">{estimate}</p>
-          )}
+          {estimate && <p className="mt-1 text-xs text-zinc-500">{estimate}</p>}
         </div>
 
         <button
@@ -708,12 +699,57 @@ function TokenBox({
             alt={token.symbol}
             className="h-7 w-7 rounded-full"
           />
-
           <span>{token.symbol}</span>
-
           <ChevronDown size={16} className="text-zinc-400" />
         </button>
       </div>
+
+      {showMax && (
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          <button
+            type="button"
+            onClick={() => setPercentAmount(0.25)}
+            disabled={!balance || numericBalance <= 0}
+            className="h-9 rounded-xl border border-white/10 bg-[#0B0E14] text-sm font-semibold text-[#A4AAB7] transition hover:border-[#FFC928]/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            25%
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPercentAmount(0.5)}
+            disabled={!balance || numericBalance <= 0}
+            className="h-9 rounded-xl border border-white/10 bg-[#0B0E14] text-sm font-semibold text-[#A4AAB7] transition hover:border-[#FFC928]/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            50%
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPercentAmount(0.75)}
+            disabled={!balance || numericBalance <= 0}
+            className="h-9 rounded-xl border border-white/10 bg-[#0B0E14] text-sm font-semibold text-[#A4AAB7] transition hover:border-[#FFC928]/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            75%
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (onMax) {
+                onMax();
+                return;
+              }
+
+              setPercentAmount(1);
+            }}
+            disabled={!balance || numericBalance <= 0}
+            className="h-9 rounded-xl border border-white/10 bg-[#0B0E14] text-sm font-semibold text-[#A4AAB7] transition hover:border-[#FFC928]/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            MAX
+          </button>
+        </div>
+      )}
     </div>
   );
 }
