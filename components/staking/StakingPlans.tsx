@@ -1,7 +1,27 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, CalendarDays } from "lucide-react";
 import type { StakingPlan } from "./StakingDashboard";
+
+function getMonthLabel(days: number) {
+  if (days <= 31) return "1 Month";
+  if (days <= 95) return "3 Months";
+  if (days <= 190) return "6 Months";
+  return "12 Months";
+}
+
+function getAccent(index: number, selected: boolean) {
+  if (selected) return "border-[#FFC928] shadow-[0_0_0_1px_rgba(255,201,40,0.35)]";
+
+  const accents = [
+    "border-[#FFC928]/40 hover:border-[#FFC928]",
+    "border-[#1250FF]/40 hover:border-[#1250FF]",
+    "border-[#8B35FF]/40 hover:border-[#8B35FF]",
+    "border-[#F59E0B]/40 hover:border-[#F59E0B]",
+  ];
+
+  return accents[index % accents.length];
+}
 
 export default function StakingPlans({
   plans,
@@ -13,14 +33,12 @@ export default function StakingPlans({
   onSelectPlan: (id: number) => void;
 }) {
   return (
-    <>
-      <h2 className="mt-4 text-sm font-semibold text-white">
-        Staking Plans
-      </h2>
+    <section>
+      <h2 className="mb-3 text-lg font-black text-white">Staking Plans</h2>
 
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {plans.length > 0 ? (
-          plans.map((plan) => {
+      {plans.length > 0 ? (
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+          {plans.map((plan, index) => {
             const selected = plan.id === selectedPlanId;
 
             return (
@@ -28,54 +46,61 @@ export default function StakingPlans({
                 key={plan.id}
                 type="button"
                 onClick={() => onSelectPlan(plan.id)}
-                className={`relative rounded-[14px] border bg-[#10141d] p-2.5 text-center transition-all duration-200 ${
-                  selected
-                    ? "border-yellow-400 shadow-[0_0_0_1px_rgba(250,204,21,.25)]"
-                    : "border-zinc-800 hover:border-yellow-700"
-                }`}
+                className={[
+                  "relative min-h-[168px] rounded-2xl border bg-[#10131A] p-4 text-center transition-all duration-200",
+                  getAccent(index, selected),
+                ].join(" ")}
               >
-                {selected && (
-                  <span className="absolute left-2 top-0 -translate-y-1/2 rounded-full bg-yellow-400 px-2 py-0.5 text-[9px] font-semibold text-black">
-                    Selected
+                {index === 0 ? (
+                  <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FFC928] px-3 py-1 text-[10px] font-black text-[#05070B]">
+                    Recommended
                   </span>
-                )}
+                ) : null}
 
-                <p className="text-sm font-semibold text-white">
+                <div
+                  className={[
+                    "mx-auto grid h-11 w-11 place-items-center rounded-full border",
+                    selected
+                      ? "border-[#19C46B] bg-[#19C46B]/10 text-[#19C46B]"
+                      : "border-white/20 bg-white/[0.03] text-[#A4AAB7]",
+                  ].join(" ")}
+                >
+                  <CalendarDays size={22} />
+                </div>
+
+                <p className="mt-4 text-lg font-black text-white">
                   {plan.days} Days
                 </p>
 
-                <p className="mt-0.5 text-[10px] text-zinc-500">
-                  Plan #{plan.id}
+                <p className="mt-1 text-sm text-[#A4AAB7]">
+                  ({getMonthLabel(plan.days)})
                 </p>
 
-                <p className="mt-2 text-2xl font-bold text-green-400">
+                <p className="mt-4 text-2xl font-black text-[#19C46B]">
                   {plan.rewardPercent}
                 </p>
 
-                <p className="mt-1 text-[10px] text-zinc-500">
-                  Total Reward
-                </p>
+                <p className="mt-1 text-xs text-[#A4AAB7]">Total Rewards</p>
 
-                <div className="mt-2 flex justify-center">
-                  <div
-                    className={`flex h-4 w-4 items-center justify-center rounded-full border transition ${
-                      selected
-                        ? "border-green-400 bg-green-400 text-black"
-                        : "border-zinc-500"
-                    }`}
-                  >
-                    {selected && <Check size={10} strokeWidth={3} />}
-                  </div>
-                </div>
+                <span
+                  className={[
+                    "mx-auto mt-4 grid h-7 w-7 place-items-center rounded-full border",
+                    selected
+                      ? "border-[#19C46B] bg-[#19C46B] text-[#05070B]"
+                      : "border-[#A4AAB7] text-transparent",
+                  ].join(" ")}
+                >
+                  <Check size={17} />
+                </span>
               </button>
             );
-          })
-        ) : (
-          <div className="col-span-2 rounded-[14px] border border-zinc-800 bg-[#10141d] p-3 text-center text-xs text-zinc-400">
-            Loading staking plans...
-          </div>
-        )}
-      </div>
-    </>
+          })}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-white/10 bg-[#10131A] p-5 text-sm text-[#A4AAB7]">
+          Loading staking plans...
+        </div>
+      )}
+    </section>
   );
 }

@@ -1,3 +1,6 @@
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ExternalLink, LockKeyhole } from "lucide-react";
+
 import type { StakingPlan } from "./StakingDashboard";
 
 function cleanNumber(value: string) {
@@ -82,98 +85,141 @@ export default function StakeBox({
   }
 
   return (
-    <div className="mt-5 rounded-[20px] border border-zinc-800 bg-[#10141d] p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-semibold">Stake Amount</h2>
-          <p className="mt-1 text-[11px] text-zinc-500">
-            Selected:{" "}
-            {selectedPlan
-              ? `${selectedPlan.days} days / ${selectedPlan.rewardPercent}`
-              : "None"}
-          </p>
-          <p className="mt-1 text-[11px] text-zinc-500">
-            Minimum stake: {minimumStakeText} RIC
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={useMax}
-          className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-semibold text-yellow-400 hover:bg-yellow-400/20"
-        >
-          MAX
-        </button>
+    <section className="rounded-2xl border border-white/10 bg-[#10131A] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div>
+        <h2 className="text-xl font-black text-white">Stake RIC Now</h2>
+        <p className="mt-2 text-sm leading-5 text-[#A4AAB7]">
+          Connect your wallet, enter an amount, choose a plan, and stake.
+        </p>
       </div>
 
-      <div className="rounded-[16px] bg-[#090d15] p-3">
-        <div className="mb-2 flex items-center justify-between text-[11px] text-zinc-500">
-          <span>You stake</span>
-          <span>Balance: {formatNumber(balance)} RIC</span>
+      <div className="relative mx-auto my-5 h-28 w-44">
+        <div className="absolute inset-x-3 bottom-0 h-20 rounded-2xl bg-[#05070B] shadow-[0_0_35px_rgba(255,201,40,0.15)]" />
+        <div className="absolute left-1/2 top-3 h-20 w-20 -translate-x-1/2 rounded-full bg-[#FFC928]/20 blur-2xl" />
+        <img
+          src="/rc.png"
+          alt="RIC"
+          className="absolute left-1/2 top-2 h-24 w-24 -translate-x-1/2 object-contain"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-[#0D1118] p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm text-[#A4AAB7]">You stake</span>
+          <button
+            type="button"
+            onClick={useMax}
+            className="rounded-full bg-[#FFC928]/10 px-3 py-1 text-xs font-bold text-[#FFC928]"
+          >
+            MAX
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
           <input
-            type="text"
-            inputMode="decimal"
-            placeholder="0.0"
             value={stakeAmount}
             onChange={(e) => handleAmountChange(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-[24px] font-semibold text-white outline-none"
+            placeholder="0.00"
+            inputMode="decimal"
+            className="min-w-0 flex-1 bg-transparent text-2xl font-black text-white outline-none placeholder:text-[#606879]"
           />
 
-          <div className="flex shrink-0 items-center gap-2 rounded-full bg-[#202838] px-3 py-2 text-sm font-semibold text-white">
-            <img src="/rc.png" alt="RIC" className="h-6 w-6 rounded-full" />
-            <span>RIC</span>
+          <div className="flex shrink-0 items-center gap-2 rounded-full bg-[#202838] px-3 py-2 text-sm font-bold text-white">
+            <img src="/rc.png" alt="RIC" className="h-7 w-7 rounded-full" />
+            RIC
           </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between text-xs text-[#A4AAB7]">
+          <span>Balance: {formatNumber(balance)} RIC</span>
+          <span>Min: {minimumStakeText} RIC</span>
         </div>
       </div>
 
-      {belowMinimumStake && hasAmount && (
-        <p className="mt-2 text-xs text-yellow-400">
-          Minimum stake is {minimumStakeText} RIC.
-        </p>
-      )}
+      <div className="mt-4 rounded-2xl border border-white/10 bg-[#0D1118] p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-[#A4AAB7]">Selected Plan</span>
+          <span className="text-sm font-bold text-white">
+            {selectedPlan
+              ? `${selectedPlan.days} Days / ${selectedPlan.rewardPercent}`
+              : "None"}
+          </span>
+        </div>
 
-      <button
-        type="button"
-        onClick={buttonAction}
-        disabled={buttonDisabled}
-        className={`mt-4 h-11 w-full rounded-[16px] text-sm font-semibold ${
-          buttonDisabled
-            ? "cursor-not-allowed bg-gradient-to-r from-[#D4AF37]/50 via-[#FFD700]/50 to-[#FFB300]/50 text-black/50"
-            : "bg-yellow-400 text-black hover:bg-yellow-300"
-        }`}
-      >
-        {buttonText}
-      </button>
+        {belowMinimumStake && hasAmount ? (
+          <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300">
+            Minimum stake is {minimumStakeText} RIC.
+          </p>
+        ) : null}
+      </div>
 
-      {txHash && (
-        <div className="mt-3 rounded-[16px] border border-yellow-700/40 bg-gradient-to-br from-[#1c1708] via-[#15110a] to-[#0f0f0f] p-3 text-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-500">Transaction</span>
+      <ConnectButton.Custom>
+        {({ account, chain, openConnectModal, openChainModal }) => {
+          const connected = account && chain;
 
-            <span className="text-yellow-400">
-              {isConfirming
-                ? txType === "approve"
-                  ? "Approval Pending"
-                  : "Stake Pending"
-                : isSuccess
-                  ? "Confirmed"
-                  : "Submitted"}
-            </span>
-          </div>
+          if (!connected) {
+            return (
+              <button
+                type="button"
+                onClick={openConnectModal}
+                className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#FFC928] text-base font-bold text-[#05070B] hover:bg-yellow-300"
+              >
+                <LockKeyhole size={18} />
+                Connect Wallet to Stake
+              </button>
+            );
+          }
+
+          if (chain.unsupported) {
+            return (
+              <button
+                type="button"
+                onClick={openChainModal}
+                className="mt-5 h-12 w-full rounded-xl bg-red-500 text-base font-bold text-white"
+              >
+                Wrong Network
+              </button>
+            );
+          }
+
+          return (
+            <button
+              type="button"
+              onClick={buttonAction}
+              disabled={buttonDisabled}
+              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#FFC928] text-base font-bold text-[#05070B] hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LockKeyhole size={18} />
+              {buttonText}
+            </button>
+          );
+        }}
+      </ConnectButton.Custom>
+
+      {txHash ? (
+        <div className="mt-4 rounded-2xl border border-[#FFC928]/20 bg-[#FFC928]/10 p-3 text-sm">
+          <p className="text-white">
+            Transaction{" "}
+            {isConfirming
+              ? txType === "approve"
+                ? "Approval Pending"
+                : "Stake Pending"
+              : isSuccess
+                ? "Confirmed"
+                : "Submitted"}
+          </p>
 
           <a
             href={`https://bscscan.com/tx/${txHash}`}
             target="_blank"
             rel="noreferrer"
-            className="mt-2 block break-all text-[11px] text-yellow-400 hover:underline"
+            className="mt-2 inline-flex items-center gap-2 text-xs font-bold text-[#FFC928]"
           >
             View on BscScan
+            <ExternalLink size={13} />
           </a>
         </div>
-      )}
-    </div>
+      ) : null}
+    </section>
   );
 }
