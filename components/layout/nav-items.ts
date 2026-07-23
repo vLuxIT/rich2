@@ -26,7 +26,7 @@ export const navItems = [
   {
     label: "Revenue Share Token (RST)",
     shortLabel: "RST",
-    href: "/rst",
+    href: "/rsttt",
     icon: "RST",
   },
   {

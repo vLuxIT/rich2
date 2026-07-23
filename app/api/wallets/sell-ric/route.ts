@@ -8,6 +8,7 @@ import {
   isAddress,
   parseAbi,
   parseEther,
+  parseGwei,
   parseUnits,
   type Address,
 } from "viem";
@@ -22,6 +23,14 @@ import { decryptPrivateKey } from "@/lib/walletCrypto";
 export const runtime = "nodejs";
 
 const WBNB_ADDRESS = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" as Address;
+
+const MIN_BSC_GAS_PRICE_GWEI = "0.1";
+const APPROVAL_GAS_LIMIT = BigInt(process.env.SELL_RIC_APPROVAL_GAS_LIMIT || "80000");
+const SWAP_GAS_LIMIT = BigInt(process.env.SELL_RIC_SWAP_GAS_LIMIT || "500000");
+const USDT_TRANSFER_GAS_LIMIT = BigInt(process.env.SELL_RIC_USDT_TRANSFER_GAS_LIMIT || "80000");
+const FUNDING_TRANSFER_GAS_LIMIT = BigInt(21000);
+const SAFETY_GAS_LIMIT = BigInt(process.env.SELL_RIC_SAFETY_GAS_LIMIT || "100000");
+
 
 const routerAbi = parseAbi([
   "function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)",
@@ -108,9 +117,22 @@ function isValidDecimalAmount(value: string) {
 }
 
 async function getBnbTopupAmount(
-  publicClient: ReturnType<typeof createPublicClient>
+  publicClient: ReturnType<typeof createPublicClient>,
+  gasPrice: bigint,
+  needsApproval: boolean
 ) {
   const gasTopupUsd = process.env.GAS_TOPUP_USD || "0.07";
+  const configuredFallbackBnb = parseEther(process.env.GAS_TOPUP_BNB || "0.00012");
+
+  const requiredGasLimit =
+    (needsApproval ? APPROVAL_GAS_LIMIT : BigInt(0)) +
+    SWAP_GAS_LIMIT +
+    USDT_TRANSFER_GAS_LIMIT +
+    SAFETY_GAS_LIMIT;
+
+  const requiredGasBnb = gasPrice * requiredGasLimit;
+
+  let quotedUsdBnb = BigInt(0);
 
   try {
     const usdtAmount = parseUnits(gasTopupUsd, USDT_TOKEN.decimals);
@@ -122,19 +144,55 @@ async function getBnbTopupAmount(
       args: [usdtAmount, [USDT_TOKEN.address, WBNB_ADDRESS]],
     })) as bigint[];
 
-    const quotedBnb = amounts[amounts.length - 1];
-
-    if (quotedBnb > BigInt(0)) {
-      return quotedBnb;
-    }
+    quotedUsdBnb = amounts[amounts.length - 1] || BigInt(0);
   } catch (error) {
     console.warn(
-      "Failed to quote GAS_TOPUP_USD. Falling back to GAS_TOPUP_BNB.",
+      "Failed to quote GAS_TOPUP_USD. Falling back to gas-budget topup.",
       error
     );
   }
 
-  return parseEther(process.env.GAS_TOPUP_BNB || "0.00012");
+  return [quotedUsdBnb, configuredFallbackBnb, requiredGasBnb].reduce((max, value) =>
+    value > max ? value : max
+  );
+}
+
+function getLegacyGasPrice() {
+  /**
+   * Do not fall back to BSC_GAS_PRICE_GWEI here. That value may be set high for
+   * other backend routes. The sell route only needs to be above the BSC node
+   * minimum tip requirement, and 0.1 gwei clears the 0.05 gwei minimum shown by
+   * Ankr.
+   */
+  return parseGwei(process.env.SELL_RIC_GAS_PRICE_GWEI || MIN_BSC_GAS_PRICE_GWEI);
+}
+
+async function assertTokenWalletHasEnoughBnb(
+  publicClient: ReturnType<typeof createPublicClient>,
+  walletAddress: Address,
+  gasPrice: bigint,
+  needsApproval: boolean
+) {
+  const currentBnbBalance = await publicClient.getBalance({
+    address: walletAddress,
+  });
+
+  const requiredGasLimit =
+    (needsApproval ? APPROVAL_GAS_LIMIT : BigInt(0)) +
+    SWAP_GAS_LIMIT +
+    USDT_TRANSFER_GAS_LIMIT +
+    SAFETY_GAS_LIMIT;
+
+  const requiredBnb = gasPrice * requiredGasLimit;
+
+  if (currentBnbBalance < requiredBnb) {
+    throw new Error(
+      `Generated wallet needs more BNB for gas. Required ${formatUnits(
+        requiredBnb,
+        18
+      )} BNB, current ${formatUnits(currentBnbBalance, 18)} BNB. Increase GAS_TOPUP_BNB or GAS_TOPUP_USD.`
+    );
+  }
 }
 
 async function updateSellTx(id: string | undefined, values: Record<string, unknown>) {
@@ -282,6 +340,8 @@ export async function POST(req: NextRequest) {
       transport: http(bscRpcUrl),
     });
 
+    const gasPrice = getLegacyGasPrice();
+
     const { data: createdTx, error: createTxError } = await supabaseAdmin
       .from("ric_sell_transactions")
       .insert({
@@ -375,7 +435,15 @@ export async function POST(req: NextRequest) {
       status: "funding_gas",
     });
 
-    const topupAmount = await getBnbTopupAmount(publicClient);
+    const allowance = await publicClient.readContract({
+      address: ricTokenAddress,
+      abi: erc20Abi,
+      functionName: "allowance",
+      args: [tokenWalletAccount.address, PANCAKE_V2_ROUTER],
+    });
+
+    const needsApproval = allowance < amountToSellRaw;
+    const topupAmount = await getBnbTopupAmount(publicClient, gasPrice, needsApproval);
     const currentBnbBalance = await publicClient.getBalance({
       address: tokenWalletAccount.address,
     });
@@ -386,6 +454,8 @@ export async function POST(req: NextRequest) {
       const gasFundingHash = await gasFunderClient.sendTransaction({
         to: tokenWalletAccount.address,
         value: amountToFund,
+        gas: FUNDING_TRANSFER_GAS_LIMIT,
+        gasPrice,
       });
 
       await updateSellTx(transactionId, {
@@ -398,23 +468,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    await assertTokenWalletHasEnoughBnb(
+      publicClient,
+      tokenWalletAccount.address,
+      gasPrice,
+      needsApproval
+    );
+
     await updateSellTx(transactionId, {
       status: "approving",
     });
 
-    const allowance = await publicClient.readContract({
-      address: ricTokenAddress,
-      abi: erc20Abi,
-      functionName: "allowance",
-      args: [tokenWalletAccount.address, PANCAKE_V2_ROUTER],
-    });
-
-    if (allowance < amountToSellRaw) {
+    if (needsApproval) {
       const approvalHash = await tokenWalletClient.writeContract({
         address: ricTokenAddress,
         abi: erc20Abi,
         functionName: "approve",
         args: [PANCAKE_V2_ROUTER, amountToSellRaw],
+        gas: APPROVAL_GAS_LIMIT,
+        gasPrice,
       });
 
       await updateSellTx(transactionId, {
@@ -463,6 +535,8 @@ export async function POST(req: NextRequest) {
         tokenWalletAccount.address,
         deadline,
       ],
+      gas: SWAP_GAS_LIMIT,
+      gasPrice,
     });
 
     await updateSellTx(transactionId, {
@@ -507,6 +581,8 @@ export async function POST(req: NextRequest) {
       abi: erc20Abi,
       functionName: "transfer",
       args: [receiverAddress, usdtReceived],
+      gas: USDT_TRANSFER_GAS_LIMIT,
+      gasPrice,
     });
 
     await updateSellTx(transactionId, {
