@@ -256,53 +256,30 @@ export async function POST(req: NextRequest) {
     const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
     const gasPrice = await getLegacyGasPrice(publicClient);
 
-    await publicClient.simulateContract({
-      account,
-      address: RIC_ALLOCATION_ROUTER_ADDRESS,
-      abi: ricAllocationRouterAbi,
-      functionName: "executeSubscriptionBatch",
-      args: [amount, minRicOut, deadline],
-      gasPrice,
-    });
-
-    let gasLimit = DEFAULT_BATCH_GAS_LIMIT;
-
-    try {
-      const estimatedGas = await publicClient.estimateContractGas({
-        account,
-        address: RIC_ALLOCATION_ROUTER_ADDRESS,
-        abi: ricAllocationRouterAbi,
-        functionName: "executeSubscriptionBatch",
-        args: [amount, minRicOut, deadline],
-        gasPrice,
-      });
-
-      const estimatedWithBuffer = (estimatedGas * BigInt(130)) / BigInt(100);
-
-      /**
-       * Some RPCs can return an absurd gas estimate for this batch call
-       * e.g. 600,000,000 gas. That makes viem think the executor needs far
-       * more BNB than the transaction can realistically use. Keep the gas
-       * limit bounded and configurable.
-       */
-      if (
-        estimatedWithBuffer > DEFAULT_BATCH_GAS_LIMIT &&
-        estimatedWithBuffer <= MAX_BATCH_GAS_LIMIT
-      ) {
-        gasLimit = estimatedWithBuffer;
-      }
-    } catch (error) {
-      console.warn(
-        "Failed to estimate executeSubscriptionBatch gas. Using configured gas limit.",
-        error
-      );
-    }
+    /**
+     * Keep the gas limit bounded BEFORE simulateContract.
+     *
+     * The previous version simulated without a gas limit, so the RPC supplied
+     * 600,000,000 gas during eth_call and rejected the call because the executor
+     * wallet did not have enough BNB to cover that imaginary maximum.
+     */
+    const gasLimit = DEFAULT_BATCH_GAS_LIMIT;
 
     await assertExecutorHasEnoughBnb({
       publicClient,
       executor: account.address,
       gasPrice,
       estimatedGas: gasLimit,
+    });
+
+    await publicClient.simulateContract({
+      account,
+      address: RIC_ALLOCATION_ROUTER_ADDRESS,
+      abi: ricAllocationRouterAbi,
+      functionName: "executeSubscriptionBatch",
+      args: [amount, minRicOut, deadline],
+      gas: gasLimit,
+      gasPrice,
     });
 
     const hash = await walletClient.writeContract({
