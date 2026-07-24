@@ -1,5 +1,7 @@
 import Image from "next/image";
+import { formatUnits } from "viem";
 import Link from "next/link";
+import { useReadContract } from "wagmi";
 import {
   ArrowRight,
   Droplets,
@@ -14,6 +16,7 @@ import {
 import RicDashboardMarketCard from "@/components/market/RicDashboardMarketCard";
 import RstDashboardMarketCard from "@/components/market/RstDashboardMarketCard";
 import RicLiquidityPoolCard from "@/components/market/RicLiquidityPoolCard";
+import { RST_TREASURY_ADDRESS, rstTreasuryAbi } from "@/lib/rstContracts";
 import HeroSlider from "./HeroSlider";
 
 const actionCards = [
@@ -298,6 +301,64 @@ function PoolCard({
   );
 }
 
+function formatRedemptionPoolUsd(value?: bigint) {
+  if (value === undefined) return "$0.00";
+
+  const one18 = BigInt("1000000000000000000");
+  const one6 = BigInt("1000000");
+
+  let numeric: number;
+
+  if (value >= one18) {
+    numeric = Number(formatUnits(value, 18));
+  } else if (value >= one6) {
+    numeric = Number(formatUnits(value, 6));
+  } else {
+    numeric = Number(value);
+  }
+
+  return numeric.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: numeric >= 1000 ? 0 : 2,
+  });
+}
+
+function RstRedemptionPoolCard() {
+  const { data: redemptionPool, isLoading } = useReadContract({
+    address: RST_TREASURY_ADDRESS,
+    abi: rstTreasuryAbi,
+    functionName: "redemptionPoolBalance",
+  });
+
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#10131A] p-3 md:border-white/5 md:bg-[#0D1118] md:p-4">
+      <div className="flex items-start gap-2">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#123DDB] text-[8px] font-black text-white md:h-7 md:w-7 md:text-[9px]">
+          RST
+        </span>
+
+        <p className="max-w-[115px] text-[11px] leading-4 text-[#A4AAB7] md:max-w-none md:text-sm md:leading-5">
+          Total RST Redemption Pool
+        </p>
+      </div>
+
+      <p className="mt-4 break-words text-[19px] font-bold leading-tight text-white md:mt-5 md:text-2xl">
+        {isLoading && redemptionPool === undefined
+          ? "Loading..."
+          : formatRedemptionPoolUsd(redemptionPool as bigint | undefined)}
+      </p>
+      <p className="mt-1 text-[11px] font-medium text-[#19C46B] md:text-xs">
+        Live
+      </p>
+
+      <div className="absolute bottom-3 right-3 text-[#123DDB] md:bottom-4 md:right-4">
+        <CoinsIcon />
+      </div>
+    </div>
+  );
+}
+
 function CoinsIcon() {
   return (
     <svg viewBox="0 0 48 48" className="h-10 w-10 md:h-12 md:w-12" fill="none">
@@ -325,12 +386,7 @@ export default function HomeDashboard() {
 
         <RstDashboardMarketCard />
 
-        <PoolCard
-          type="rst"
-          title="Total RST Redemption Pool"
-          value="$2,450,000"
-          subtitle="Growing every day"
-        />
+        <RstRedemptionPoolCard />
 
         <RicLiquidityPoolCard />
       </section>
