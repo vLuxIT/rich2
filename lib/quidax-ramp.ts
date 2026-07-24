@@ -75,8 +75,16 @@ export async function quidaxRampFetch<T>(
   return payload as T;
 }
 
-function queryString(values: Record<string, string>): string {
-  return new URLSearchParams(values).toString();
+function queryString<T extends object>(values: T): string {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(values)) {
+    if (value !== undefined && value !== null) {
+      params.set(key, String(value));
+    }
+  }
+
+  return params.toString();
 }
 
 export function getBuyQuote<T = unknown>(query: BuyQuoteQuery): Promise<T> {
