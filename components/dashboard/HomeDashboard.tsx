@@ -133,7 +133,7 @@ function TokenIcon({ type }: { type: string }) {
     return (
       <div className="relative grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full border border-[#FFC928]/70 bg-[#FFC928]/10 md:h-14 md:w-14">
         <Image
-          src="/rc2.png"
+          src="/rc.png"
           alt="RIC"
           fill
           sizes="58px"

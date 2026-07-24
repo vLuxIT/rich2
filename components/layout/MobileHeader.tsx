@@ -11,7 +11,7 @@ export default function MobileHeader() {
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <div className="relative h-12 w-12 shrink-0 overflow-hidden">
             <Image
-              src="/rc.png"
+              src="/rc2.png"
               alt="Richlance"
               fill
               sizes="48px"
