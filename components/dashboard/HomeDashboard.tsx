@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { formatUnits } from "viem";
 import Link from "next/link";
