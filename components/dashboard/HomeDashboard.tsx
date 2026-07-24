@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import RicDashboardMarketCard from "@/components/market/RicDashboardMarketCard";
+import RstDashboardMarketCard from "@/components/market/RstDashboardMarketCard";
 import RicLiquidityPoolCard from "@/components/market/RicLiquidityPoolCard";
 import HeroSlider from "./HeroSlider";
 
@@ -322,7 +323,7 @@ export default function HomeDashboard() {
       <section className="grid grid-cols-2 gap-2 lg:hidden">
         <RicDashboardMarketCard />
 
-        <MarketCard title="RST Price" value="$1.00" change="+1.35%" chart="blue" />
+        <RstDashboardMarketCard />
 
         <PoolCard
           type="rst"
@@ -346,7 +347,7 @@ export default function HomeDashboard() {
           <div className="grid gap-3 md:grid-cols-2">
             <RicDashboardMarketCard />
 
-            <MarketCard title="RST Price" value="$1.00" change="+1.35%" chart="blue" />
+            <RstDashboardMarketCard />
           </div>
         </div>
 

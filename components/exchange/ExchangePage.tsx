@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { formatUnits } from "viem";
 import {
   ArrowRight,
   BarChart3,
@@ -13,6 +14,9 @@ import {
 import RicDashboardMarketCard from "@/components/market/RicDashboardMarketCard";
 import RicLiquidityPoolCard from "@/components/market/RicLiquidityPoolCard";
 import { formatPercent, formatUsd, useRicMarket } from "@/hooks/useRicMarket";
+import { formatRstPairPrice, formatRstUsd, useRstMarket } from "@/hooks/useRstMarket";
+import { RST_TREASURY_ADDRESS, rstTreasuryAbi } from "@/lib/rstContracts";
+import { useReadContract } from "wagmi";
 import SwapCard from "./SwapCard";
 
 const benefits = [
@@ -65,6 +69,8 @@ function MiniChart({ variant }: { variant: "green" | "blue" }) {
 }
 
 function RstPriceCard() {
+  const { priceUsd, isLoading } = useRstMarket();
+
   return (
     <div className="rounded-xl border border-white/5 bg-[#0D1118] p-4">
       <div className="flex items-center gap-2">
@@ -76,8 +82,10 @@ function RstPriceCard() {
 
       <div className="mt-4 grid grid-cols-[auto,1fr] items-end gap-4">
         <div>
-          <p className="text-2xl font-bold text-white">$1.00</p>
-          <p className="mt-1 text-sm font-semibold text-[#19C46B]">+1.35% ↗</p>
+          <p className="text-2xl font-bold text-white">
+            {isLoading && priceUsd === null ? "Loading..." : formatRstUsd(priceUsd)}
+          </p>
+          <p className="mt-1 text-sm font-semibold text-[#19C46B]">Live</p>
         </div>
 
         <MiniChart variant="blue" />
@@ -86,7 +94,36 @@ function RstPriceCard() {
   );
 }
 
+function formatRedemptionPoolUsd(value?: bigint) {
+  if (value === undefined) return "$0.00";
+
+  const one18 = BigInt("1000000000000000000");
+  const one6 = BigInt("1000000");
+
+  let numeric: number;
+
+  if (value >= one18) {
+    numeric = Number(formatUnits(value, 18));
+  } else if (value >= one6) {
+    numeric = Number(formatUnits(value, 6));
+  } else {
+    numeric = Number(value);
+  }
+
+  return numeric.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: numeric >= 1000 ? 0 : 2,
+  });
+}
+
 function RstPoolCard() {
+  const { data: redemptionPool, isLoading } = useReadContract({
+    address: RST_TREASURY_ADDRESS,
+    abi: rstTreasuryAbi,
+    functionName: "redemptionPoolBalance",
+  });
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/5 bg-[#0D1118] p-4">
       <div className="flex items-start gap-2">
@@ -99,10 +136,12 @@ function RstPoolCard() {
         </p>
       </div>
 
-      <p className="mt-5 text-2xl font-bold text-white">$2,450,000</p>
-      <p className="mt-1 text-xs font-medium text-[#19C46B]">
-        Growing every day
+      <p className="mt-5 break-words text-2xl font-bold leading-tight text-white">
+        {isLoading && redemptionPool === undefined
+          ? "Loading..."
+          : formatRedemptionPoolUsd(redemptionPool as bigint | undefined)}
       </p>
+      <p className="mt-1 text-xs font-medium text-[#19C46B]">Live</p>
 
       <div className="absolute bottom-4 right-4 text-[#123DDB]">
         <CoinsIcon />
@@ -191,6 +230,8 @@ function RicUsdtPopularRow() {
 }
 
 function RstUsdtPopularRow() {
+  const { priceUsd, isLoading } = useRstMarket();
+
   return (
     <div className="grid grid-cols-[1fr_auto_88px] items-center gap-3 py-3 first:pt-0 last:pb-0">
       <div className="flex min-w-0 items-center">
@@ -199,14 +240,16 @@ function RstUsdtPopularRow() {
         <div className="min-w-0">
           <p className="truncate text-sm font-bold text-white">RST / USDT</p>
           <p className="truncate text-[11px] text-[#A4AAB7]">
-            Volume $95.43K
+            Live contract price
           </p>
         </div>
       </div>
 
       <div className="text-right">
-        <p className="text-sm font-bold text-white">1.000</p>
-        <p className="text-xs font-semibold text-[#19C46B]">+1.35%</p>
+        <p className="text-sm font-bold text-white">
+          {isLoading && priceUsd === null ? "Loading..." : formatRstPairPrice(priceUsd)}
+        </p>
+        <p className="text-xs font-semibold text-[#19C46B]">Live</p>
       </div>
 
       <MiniChart variant="blue" />

@@ -2,6 +2,7 @@ import { Bell, Settings } from "lucide-react";
 
 import RicTopPricePill from "@/components/market/RicTopPricePill";
 import WalletButton from "@/components/wallet/WalletButton";
+import RstTopPricePill from "@/components/market/RstTopPricePill";
 
 function PricePill({
   icon,
@@ -31,16 +32,7 @@ export default function DesktopTopNav() {
         <div className="flex h-full items-center rounded-full">
           <RicTopPricePill />
 
-          <PricePill
-            label="RST Price"
-            value="$1.00"
-            change="+1.35%"
-            icon={
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-[#0B44D9] text-[9px] font-black text-white">
-                RST
-              </span>
-            }
-          />
+          <RstTopPricePill />
         </div>
 
         <div className="flex items-center gap-3">

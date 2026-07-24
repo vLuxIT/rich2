@@ -145,7 +145,7 @@ function RstCoin({ size = "lg" }: { size?: "sm" | "lg" | "xl" }) {
   const sizes = {
     sm: "h-10 w-10 text-sm",
     lg: "h-20 w-20 text-2xl",
-    xl: "h-28 w-28 text-4xl md:h-32 md:w-32",
+    xl: "h-16 w-16 text-xl sm:h-20 sm:w-20 md:h-32 md:w-32 md:text-4xl",
   };
 
   return (
@@ -185,10 +185,10 @@ function Sparkline({ color }: { color: string }) {
 
 function DashboardHero() {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#070B12] px-5 py-5 md:border-0 md:bg-transparent md:px-0 md:py-0">
+    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#070B12] px-4 py-5 sm:px-5 md:border-0 md:bg-transparent md:px-0 md:py-0">
       <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_70%_50%,rgba(18,80,255,0.25),transparent_50%)]" />
 
-      <div className="relative z-10 flex items-start gap-4">
+      <div className="relative z-10 flex items-start gap-3 sm:gap-4">
         <Link
           href="/"
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0B0E14] text-white md:hidden"
@@ -198,11 +198,11 @@ function DashboardHero() {
 
         <RstCoin size="sm" />
 
-        <div className="min-w-0">
-          <h1 className="text-xl font-black text-white md:text-[26px]">
+        <div className="min-w-0 max-w-[225px] sm:max-w-none">
+          <h1 className="text-lg font-black leading-tight text-white sm:text-xl md:text-[26px]">
             Revenue Share Token (RST)
           </h1>
-          <p className="mt-1 text-sm font-semibold text-[#D4D8E2]">
+          <p className="mt-1 text-xs font-semibold leading-5 text-[#D4D8E2] sm:text-sm">
             Your Shareholder Dashboard
           </p>
           <p className="mt-4 hidden max-w-xl text-sm leading-6 text-[#A4AAB7] md:block">
@@ -211,9 +211,9 @@ function DashboardHero() {
           </p>
         </div>
 
-        <div className="absolute right-0 top-1/2 h-24 w-40 -translate-y-1/2 md:h-40 md:w-80">
+        <div className="pointer-events-none absolute right-1 top-1/2 h-20 w-24 -translate-y-1/2 sm:right-0 sm:h-24 sm:w-40 md:h-40 md:w-80">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_50%,rgba(18,80,255,0.42),transparent_56%)]" />
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 md:right-20">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 sm:right-8 md:right-20">
             <RstCoin size="xl" />
           </div>
         </div>
@@ -283,7 +283,7 @@ function MetricCard({
         <p className="min-h-[38px] text-sm font-semibold leading-5 text-[#D4D8E2]">
           <InfoLabel>{title}</InfoLabel>
         </p>
-        <p className="mt-3 text-2xl font-black text-white md:text-[26px]">
+        <p className="mt-3 break-words text-[26px] font-black leading-tight text-white md:text-[26px]">
           {value}
         </p>
         <p className="mt-2 text-sm font-bold text-[#19C46B]">{change}</p>
@@ -349,7 +349,7 @@ function HoldingsCard({
 
       <div className="mt-5 grid gap-5 md:grid-cols-[210px_1fr]">
         <div className="flex flex-col items-center justify-center">
-          <div className="relative grid h-36 w-36 place-items-center rounded-full bg-[conic-gradient(#168BFF_0_78%,#0E1728_78%_100%)] p-3">
+          <div className="relative grid h-32 w-32 place-items-center rounded-full bg-[conic-gradient(#168BFF_0_78%,#0E1728_78%_100%)] p-3 sm:h-36 sm:w-36">
             <div className="grid h-full w-full place-items-center rounded-full bg-[#10131A] text-center">
               <p className="text-2xl font-black text-white">
                 {formatToken(rstBalance).replace(/\.00$/, "")}
@@ -1092,7 +1092,7 @@ export default function RstDashboard() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="-mx-2 space-y-4 sm:mx-0">
       <DashboardHero />
 
       <MobilePortfolioValue portfolioValue={portfolioValue} />

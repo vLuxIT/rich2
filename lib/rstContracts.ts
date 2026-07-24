@@ -3,22 +3,22 @@
 import { parseAbi, type Address } from "viem";
 
 export const RST_TOKEN_ADDRESS =
-  "0x0dba32d68a0604f53f39a3660831322e955911fa" as Address;
+  "0x0Cdd0f508865c266168b0011956a013a1883F450" as Address;
 
 export const RIC_ALLOCATION_ROUTER_ADDRESS =
-  "0x5ff664dab40a564252c7dbdc5079e12dff6b110e" as Address;
+  "0x8fA5bFBF9af322216a7f4DC5849f4832eb08A55E" as Address;
 
 export const RST_TREASURY_ADDRESS =
-  "0x12c9409fa0a017c2c5e19a4bd4645e88f44ceac7" as Address;
+  "0x40c9497B35002C3Eb5b4096810644b81C220359D" as Address;
 
 export const RIC_CLAIM_PROCESSOR_ADDRESS =
-  "0xeFEd4E99c6634B1CbD0300B6764f2A2167AaB4B5" as Address;
+  "0x8B867A8A031654ded045EBf7d08e53F146Bc62E2" as Address;
 
 export const RST_MANAGER_ADDRESS =
-  "0x8f570a9234633fd4f2778015f38916a28b841c94" as Address;
+  "0x36D2C7a9759dae8C860d799e35C95e5Dba7b89FF" as Address;
 
 export const MONTHLY_PROFIT_ALLOCATOR_ADDRESS =
-  "0x23581745533bD9b96dF2ac7ec461258C3b27B173" as Address;
+  "0x91751086c557AC215BDc699969AdE293D3F1E30A" as Address;
 
 export const rstTokenAbi = parseAbi([
   "function name() view returns (string)",
@@ -74,6 +74,8 @@ export const ricAllocationRouterAbi = parseAbi([
   "function referralAddress() view returns (address)",
   "function stakingAddress() view returns (address)",
   "function dexRouter() view returns (address)",
+  "function executeSubscriptionBatch(uint256 amount, uint256 minRicOut, uint256 deadline)",
+  "function executeMonthlyBatch(uint256 amount, uint256 minRicOut, uint256 deadline)",
 ]);
 
 export const ricClaimProcessorAbi = parseAbi([

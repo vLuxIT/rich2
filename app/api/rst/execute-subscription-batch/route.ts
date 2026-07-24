@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   createPublicClient,
   createWalletClient,
+  formatUnits,
   http,
   parseAbi,
   parseGwei,
@@ -14,10 +15,16 @@ import { bsc } from "viem/chains";
 export const runtime = "nodejs";
 
 const RIC_ALLOCATION_ROUTER_ADDRESS =
-  "0x5ff664dab40a564252c7dbdc5079e12dff6b110e" as Address;
+  "0x8fA5bFBF9af322216a7f4DC5849f4832eb08A55E" as Address;
 
 const BPS_DENOMINATOR = BigInt(10000);
 const DEFAULT_SLIPPAGE_BPS = BigInt(500);
+const DEFAULT_BATCH_GAS_LIMIT = BigInt(
+  process.env.RST_BATCH_GAS_LIMIT || "2000000"
+);
+const MAX_BATCH_GAS_LIMIT = BigInt(
+  process.env.RST_BATCH_MAX_GAS_LIMIT || "5000000"
+);
 
 const ricAllocationRouterAbi = parseAbi([
   "function pendingSubscriptionUsdt() view returns (uint256)",
@@ -103,6 +110,36 @@ async function getLegacyGasPrice(
     return fallbackGasPrice;
   } catch {
     return fallbackGasPrice;
+  }
+}
+
+async function assertExecutorHasEnoughBnb({
+  publicClient,
+  executor,
+  gasPrice,
+  estimatedGas,
+}: {
+  publicClient: ReturnType<typeof createPublicClient>;
+  executor: Address;
+  gasPrice: bigint;
+  estimatedGas: bigint;
+}) {
+  const balance = await publicClient.getBalance({
+    address: executor,
+  });
+
+  const required = gasPrice * estimatedGas;
+
+  if (balance < required) {
+    throw new Error(
+      `Batch executor wallet needs more BNB. Executor ${executor} has ${formatUnits(
+        balance,
+        18
+      )} BNB, but this transaction needs about ${formatUnits(
+        required,
+        18
+      )} BNB. Fund the wallet from RST_BATCH_EXECUTOR_PRIVATE_KEY and retry.`
+    );
   }
 }
 
@@ -228,11 +265,52 @@ export async function POST(req: NextRequest) {
       gasPrice,
     });
 
+    let gasLimit = DEFAULT_BATCH_GAS_LIMIT;
+
+    try {
+      const estimatedGas = await publicClient.estimateContractGas({
+        account,
+        address: RIC_ALLOCATION_ROUTER_ADDRESS,
+        abi: ricAllocationRouterAbi,
+        functionName: "executeSubscriptionBatch",
+        args: [amount, minRicOut, deadline],
+        gasPrice,
+      });
+
+      const estimatedWithBuffer = (estimatedGas * BigInt(130)) / BigInt(100);
+
+      /**
+       * Some RPCs can return an absurd gas estimate for this batch call
+       * e.g. 600,000,000 gas. That makes viem think the executor needs far
+       * more BNB than the transaction can realistically use. Keep the gas
+       * limit bounded and configurable.
+       */
+      if (
+        estimatedWithBuffer > DEFAULT_BATCH_GAS_LIMIT &&
+        estimatedWithBuffer <= MAX_BATCH_GAS_LIMIT
+      ) {
+        gasLimit = estimatedWithBuffer;
+      }
+    } catch (error) {
+      console.warn(
+        "Failed to estimate executeSubscriptionBatch gas. Using configured gas limit.",
+        error
+      );
+    }
+
+    await assertExecutorHasEnoughBnb({
+      publicClient,
+      executor: account.address,
+      gasPrice,
+      estimatedGas: gasLimit,
+    });
+
     const hash = await walletClient.writeContract({
       address: RIC_ALLOCATION_ROUTER_ADDRESS,
       abi: ricAllocationRouterAbi,
       functionName: "executeSubscriptionBatch",
       args: [amount, minRicOut, deadline],
+      gas: gasLimit,
       gasPrice,
     });
 
@@ -257,6 +335,7 @@ export async function POST(req: NextRequest) {
       quotedRicOutRaw: quotedRicOut.toString(),
       minRicOutRaw: minRicOut.toString(),
       gasPriceWei: gasPrice.toString(),
+      gasUsedLimit: gasLimit.toString(),
     });
   } catch (error) {
     const message = getReadableError(error);

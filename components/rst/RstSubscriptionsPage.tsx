@@ -91,6 +91,60 @@ function getReadableError(error: unknown) {
   );
 }
 
+function getFullErrorDetails(error: unknown) {
+  const err = error as {
+    name?: string;
+    shortMessage?: string;
+    details?: string;
+    message?: string;
+    metaMessages?: string[];
+    cause?: {
+      name?: string;
+      shortMessage?: string;
+      details?: string;
+      message?: string;
+      metaMessages?: string[];
+      cause?: {
+        name?: string;
+        shortMessage?: string;
+        details?: string;
+        message?: string;
+        metaMessages?: string[];
+      };
+    };
+  };
+
+  const parts = [
+    err.name ? `Error Type: ${err.name}` : "",
+    err.shortMessage ? `Short Message: ${err.shortMessage}` : "",
+    err.details ? `Details: ${err.details}` : "",
+    err.message ? `Message:\n${err.message}` : "",
+    err.metaMessages?.length ? `Meta:\n${err.metaMessages.join("\n")}` : "",
+    err.cause?.name ? `Cause Type: ${err.cause.name}` : "",
+    err.cause?.shortMessage ? `Cause Short Message: ${err.cause.shortMessage}` : "",
+    err.cause?.details ? `Cause Details: ${err.cause.details}` : "",
+    err.cause?.message ? `Cause Message:\n${err.cause.message}` : "",
+    err.cause?.metaMessages?.length
+      ? `Cause Meta:\n${err.cause.metaMessages.join("\n")}`
+      : "",
+    err.cause?.cause?.name ? `Nested Cause Type: ${err.cause.cause.name}` : "",
+    err.cause?.cause?.shortMessage
+      ? `Nested Cause Short Message: ${err.cause.cause.shortMessage}`
+      : "",
+    err.cause?.cause?.details
+      ? `Nested Cause Details: ${err.cause.cause.details}`
+      : "",
+    err.cause?.cause?.message
+      ? `Nested Cause Message:\n${err.cause.cause.message}`
+      : "",
+    err.cause?.cause?.metaMessages?.length
+      ? `Nested Cause Meta:\n${err.cause.cause.metaMessages.join("\n")}`
+      : "",
+  ].filter(Boolean);
+
+  return parts.join("\n\n") || getReadableError(error);
+}
+
 function toNumber(value?: bigint, decimals = USDT_DECIMALS) {
   if (value === undefined) return 0;
   return Number(formatUnits(value, decimals));
@@ -618,6 +672,7 @@ export default function RstSubscriptionsPage() {
       toast.success("RST profit claimed.");
       refetchPlanData();
     } catch (error) {
+      console.error("RST claim failed:", getFullErrorDetails(error));
       toast.error(getReadableError(error));
     }
   }
@@ -656,6 +711,7 @@ export default function RstSubscriptionsPage() {
       toast.success("RST contract terminated. Monthly capital claims are now available according to the contract schedule.");
       refetchPlanData();
     } catch (error) {
+      console.error("RST termination failed:", getFullErrorDetails(error));
       toast.error(getReadableError(error));
     }
   }
@@ -697,6 +753,7 @@ export default function RstSubscriptionsPage() {
       toast.success("Monthly termination capital claimed.");
       refetchPlanData();
     } catch (error) {
+      console.error("RST termination capital claim failed:", getFullErrorDetails(error));
       toast.error(getReadableError(error));
     }
   }
