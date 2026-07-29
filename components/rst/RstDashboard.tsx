@@ -141,6 +141,23 @@ function formatCompact(value?: bigint, decimals = RST_DECIMALS, suffix = "") {
   }).format(numeric)}${suffix}`;
 }
 
+function calculateRstFromPrice(capitalUsdt?: bigint, rstPriceUsdt?: bigint) {
+  if (!capitalUsdt || !rstPriceUsdt || rstPriceUsdt <= BigInt(0)) {
+    return undefined;
+  }
+
+  return (capitalUsdt * BigInt(10) ** BigInt(RST_DECIMALS)) / rstPriceUsdt;
+}
+
+function hasPreviewPriceMismatch(expected?: bigint, previewed?: bigint) {
+  if (!expected || !previewed) return false;
+
+  const difference = expected > previewed ? expected - previewed : previewed - expected;
+  const tolerance = expected / BigInt(10000); // 0.01%
+
+  return difference > tolerance;
+}
+
 function RstCoin({ size = "lg" }: { size?: "sm" | "lg" | "xl" }) {
   const sizes = {
     sm: "h-10 w-10 text-sm",
@@ -522,6 +539,7 @@ function SubscribeCard({
   currentTermsVersion,
   minimumSubscription,
   managerInventory,
+  currentRstPurchasePrice,
   onSuccess,
 }: {
   usdtAddress: Address;
@@ -532,6 +550,7 @@ function SubscribeCard({
   currentTermsVersion?: bigint;
   minimumSubscription?: bigint;
   managerInventory?: bigint;
+  currentRstPurchasePrice?: bigint;
   onSuccess?: () => void;
 }) {
   const publicClient = usePublicClient();
@@ -568,6 +587,14 @@ function SubscribeCard({
   const taxUsdt = preview?.[0];
   const totalUsdt = preview?.[1];
   const rstAmount = preview?.[2];
+  const expectedRstAmount = calculateRstFromPrice(
+    capitalUsdt,
+    currentRstPurchasePrice
+  );
+  const previewPriceMismatch = hasPreviewPriceMismatch(
+    expectedRstAmount,
+    rstAmount
+  );
 
   const managerMayNotHaveEnoughRst = Boolean(
     rstAmount && managerInventory !== undefined && managerInventory < rstAmount
@@ -594,6 +621,7 @@ function SubscribeCard({
       acceptedTerms &&
       !belowMinimum &&
       !insufficientUsdt &&
+      !previewPriceMismatch &&
       !isPreviewLoading &&
       !isPending
   );
@@ -745,6 +773,12 @@ function SubscribeCard({
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-[#0D1118] p-4 text-sm">
         <div className="flex items-center justify-between">
+          <span className="text-[#A4AAB7]">Current RST Price</span>
+          <span className="font-black text-white">
+            {formatUsd(currentRstPurchasePrice)}
+          </span>
+        </div>
+        <div className="mt-3 flex items-center justify-between">
           <span className="text-[#A4AAB7]">Tax / Fee</span>
           <span className="font-black text-white">{formatUsd(taxUsdt)}</span>
         </div>
@@ -758,7 +792,23 @@ function SubscribeCard({
             {formatToken(rstAmount, RST_DECIMALS, " RST")}
           </span>
         </div>
+        {expectedRstAmount ? (
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-[#A4AAB7]">Expected at Current Price</span>
+            <span className="font-black text-white">
+              {formatToken(expectedRstAmount, RST_DECIMALS, " RST")}
+            </span>
+          </div>
+        ) : null}
       </div>
+
+      {previewPriceMismatch ? (
+        <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-xs leading-5 text-red-300">
+          The contract preview is not matching the current RST price. Subscription
+          is blocked to prevent buying at the wrong price. Check that the RSTManager
+          subscribe/preview logic uses the latest contract price.
+        </p>
+      ) : null}
 
       {managerMayNotHaveEnoughRst ? (
         <p className="mt-3 rounded-xl bg-yellow-500/10 px-3 py-2 text-xs leading-5 text-yellow-200">
@@ -1023,6 +1073,11 @@ export default function RstDashboard() {
   const activeUsdtAddress =
     (contractUsdtAddress as Address | undefined) || (USDT_TOKEN.address as Address);
 
+  const activeRstPurchasePrice =
+    (currentOpv as bigint | undefined) && (currentOpv as bigint) > BigInt(0)
+      ? (currentOpv as bigint)
+      : (subscriptionPrice as bigint | undefined);
+
   const { data: redemptionPool } = useReadContract({
     address: RST_TREASURY_ADDRESS,
     abi: rstTreasuryAbi,
@@ -1113,7 +1168,7 @@ export default function RstDashboard() {
           title="Official Programme Value (OPV)"
           value={formatUsd(currentOpv as bigint | undefined)}
           change="▲ Live"
-          note={`Subscription price: ${formatUsd(subscriptionPrice as bigint | undefined)}`}
+          note={`Purchase price: ${formatUsd(activeRstPurchasePrice)}`}
           icon={<BarChart3 size={23} />}
           color="blue"
           compact
@@ -1170,6 +1225,7 @@ export default function RstDashboard() {
             currentTermsVersion={currentTermsVersion as bigint | undefined}
             minimumSubscription={minimumSubscription as bigint | undefined}
             managerInventory={managerInventory as bigint | undefined}
+            currentRstPurchasePrice={activeRstPurchasePrice}
             onSuccess={refreshAfterSubscribe}
           />
 
