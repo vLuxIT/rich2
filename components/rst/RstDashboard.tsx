@@ -653,6 +653,26 @@ function SubscribeCard({
     return json;
   }
 
+  function syncConfigurationInBackground() {
+    void fetch("/api/rst/sync-configuration", {
+      method: "GET",
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const json = await response.json().catch(() => null);
+
+        if (!response.ok || !json?.ok) {
+          console.warn(
+            "RST configuration background sync failed:",
+            json?.error || response.statusText
+          );
+        }
+      })
+      .catch((error) => {
+        console.warn("RST configuration background sync failed:", error);
+      });
+  }
+
   async function submit() {
     if (!canSubmit || !address || !capitalUsdt || !totalUsdt || !currentTermsHash) {
       return;
@@ -705,9 +725,11 @@ function SubscribeCard({
       try {
         setStatus("Confirming transaction...");
         await executeSubscriptionBatchAfterSubscribe(subscribeHash);
+        syncConfigurationInBackground();
         toast.success("Success");
       } catch (batchError) {
         console.warn("Final confirmation failed:", batchError);
+        syncConfigurationInBackground();
         toast.warning("Subscription successful. Final confirmation failed.");
       }
 

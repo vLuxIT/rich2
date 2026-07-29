@@ -413,12 +413,7 @@ export default function HomeDashboard() {
           <h2 className="mb-4 text-base font-bold text-white">Ecosystem Pools</h2>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <PoolCard
-              type="rst"
-              title="Total RST Redemption Pool"
-              value="$2,450,000"
-              subtitle="Growing every day"
-            />
+            <RstRedemptionPoolCard />
 
             <RicLiquidityPoolCard />
           </div>
