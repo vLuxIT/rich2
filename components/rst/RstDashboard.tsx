@@ -141,21 +141,15 @@ function formatCompact(value?: bigint, decimals = RST_DECIMALS, suffix = "") {
   }).format(numeric)}${suffix}`;
 }
 
-function calculateRstFromPrice(capitalUsdt?: bigint, rstPriceUsdt?: bigint) {
-  if (!capitalUsdt || !rstPriceUsdt || rstPriceUsdt <= BigInt(0)) {
+function calculatePurchasePriceFromPreview(
+  capitalUsdt?: bigint,
+  rstAmount?: bigint
+) {
+  if (!capitalUsdt || !rstAmount || rstAmount <= BigInt(0)) {
     return undefined;
   }
 
-  return (capitalUsdt * BigInt(10) ** BigInt(RST_DECIMALS)) / rstPriceUsdt;
-}
-
-function hasPreviewPriceMismatch(expected?: bigint, previewed?: bigint) {
-  if (!expected || !previewed) return false;
-
-  const difference = expected > previewed ? expected - previewed : previewed - expected;
-  const tolerance = expected / BigInt(10000); // 0.01%
-
-  return difference > tolerance;
+  return (capitalUsdt * BigInt(10) ** BigInt(RST_DECIMALS)) / rstAmount;
 }
 
 function RstCoin({ size = "lg" }: { size?: "sm" | "lg" | "xl" }) {
@@ -587,21 +581,30 @@ function SubscribeCard({
   const taxUsdt = preview?.[0];
   const totalUsdt = preview?.[1];
   const rstAmount = preview?.[2];
-  const expectedRstAmount = calculateRstFromPrice(
+  const effectiveMinimumSubscription = useMemo(() => {
+    const hardMinimum = parseUnits("10", USDT_DECIMALS);
+
+    if (!minimumSubscription || minimumSubscription < hardMinimum) {
+      return hardMinimum;
+    }
+
+    return minimumSubscription;
+  }, [minimumSubscription]);
+
+  const contractPurchasePrice = calculatePurchasePriceFromPreview(
     capitalUsdt,
-    currentRstPurchasePrice
-  );
-  const previewPriceMismatch = hasPreviewPriceMismatch(
-    expectedRstAmount,
     rstAmount
   );
+
+  const displayedPurchasePrice =
+    contractPurchasePrice || currentRstPurchasePrice;
 
   const managerMayNotHaveEnoughRst = Boolean(
     rstAmount && managerInventory !== undefined && managerInventory < rstAmount
   );
 
   const belowMinimum = Boolean(
-    capitalUsdt && minimumSubscription && capitalUsdt < minimumSubscription
+    capitalUsdt && capitalUsdt < effectiveMinimumSubscription
   );
 
   const insufficientUsdt = Boolean(
@@ -621,7 +624,6 @@ function SubscribeCard({
       acceptedTerms &&
       !belowMinimum &&
       !insufficientUsdt &&
-      !previewPriceMismatch &&
       !isPreviewLoading &&
       !isPending
   );
@@ -728,7 +730,7 @@ function SubscribeCard({
         <div>
           <h2 className="text-base font-black text-white">Subscribe to RST</h2>
           <p className="mt-1 text-xs leading-5 text-[#A4AAB7]">
-            Minimum subscription is {formatUsd(minimumSubscription)}. All RST
+            Minimum subscription is {formatUsd(effectiveMinimumSubscription)}. All RST
             subscriptions are made using USDT.
           </p>
         </div>
@@ -766,16 +768,16 @@ function SubscribeCard({
 
         {belowMinimum ? (
           <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300">
-            Minimum RST subscription is {formatUsd(minimumSubscription)}.
+            Minimum RST subscription is {formatUsd(effectiveMinimumSubscription)}.
           </p>
         ) : null}
       </div>
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-[#0D1118] p-4 text-sm">
         <div className="flex items-center justify-between">
-          <span className="text-[#A4AAB7]">Current RST Price</span>
+          <span className="text-[#A4AAB7]">Purchase Price Used</span>
           <span className="font-black text-white">
-            {formatUsd(currentRstPurchasePrice)}
+            {formatUsd(displayedPurchasePrice)}
           </span>
         </div>
         <div className="mt-3 flex items-center justify-between">
@@ -792,23 +794,7 @@ function SubscribeCard({
             {formatToken(rstAmount, RST_DECIMALS, " RST")}
           </span>
         </div>
-        {expectedRstAmount ? (
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-[#A4AAB7]">Expected at Current Price</span>
-            <span className="font-black text-white">
-              {formatToken(expectedRstAmount, RST_DECIMALS, " RST")}
-            </span>
-          </div>
-        ) : null}
       </div>
-
-      {previewPriceMismatch ? (
-        <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-xs leading-5 text-red-300">
-          The contract preview is not matching the current RST price. Subscription
-          is blocked to prevent buying at the wrong price. Check that the RSTManager
-          subscribe/preview logic uses the latest contract price.
-        </p>
-      ) : null}
 
       {managerMayNotHaveEnoughRst ? (
         <p className="mt-3 rounded-xl bg-yellow-500/10 px-3 py-2 text-xs leading-5 text-yellow-200">
@@ -1168,7 +1154,7 @@ export default function RstDashboard() {
           title="Official Programme Value (OPV)"
           value={formatUsd(currentOpv as bigint | undefined)}
           change="▲ Live"
-          note={`Purchase price: ${formatUsd(activeRstPurchasePrice)}`}
+          note={`Live contract price: ${formatUsd(activeRstPurchasePrice)}`}
           icon={<BarChart3 size={23} />}
           color="blue"
           compact
