@@ -125,6 +125,13 @@ export const stakingAbi = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "uint256", name: "amount", type: "uint256" }],
+    name: "fundRewardPool",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       { internalType: "uint256", name: "amount", type: "uint256" },
       { internalType: "uint8", name: "plan", type: "uint8" },
