@@ -175,7 +175,7 @@ export async function GET() {
       });
     }
 
-    const fundAmount = (ricBalance * BigInt(70)) / BigInt(100);
+    const fundAmount = (ricBalance * BigInt(80)) / BigInt(100);
     const transferAmount = ricBalance - fundAmount;
 
     const allowance = await publicClient.readContract({
