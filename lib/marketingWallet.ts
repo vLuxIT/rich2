@@ -1,4 +1,9 @@
-import { createWalletClient, formatEther, formatUnits, http } from "viem";
+import {
+  createWalletClient,
+  formatEther,
+  formatUnits,
+  http,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { bsc } from "viem/chains";
 
@@ -9,8 +14,13 @@ import { RICH_TOKEN } from "@/lib/token";
 const privateKey = process.env.MARKETING_WALLET_PRIVATE_KEY;
 const rpcUrl = process.env.BSC_RPC_URL;
 
-if (!privateKey) throw new Error("Missing MARKETING_WALLET_PRIVATE_KEY");
-if (!rpcUrl) throw new Error("Missing BSC_RPC_URL");
+if (!privateKey) {
+  throw new Error("Missing MARKETING_WALLET_PRIVATE_KEY");
+}
+
+if (!rpcUrl) {
+  throw new Error("Missing BSC_RPC_URL");
+}
 
 const formattedPrivateKey = privateKey.startsWith("0x")
   ? (privateKey as `0x${string}`)
@@ -29,22 +39,29 @@ export type ReferralPayoutResult = {
   blockNumber: bigint;
 };
 
-function contractErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    const details = error as Error & {
-      shortMessage?: string;
-      details?: string;
-    };
-
-    return (
-      details.shortMessage ||
-      details.details ||
-      details.message ||
-      "Unknown contract error"
-    );
+function getDetailedErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return "Unknown contract error";
   }
 
-  return "Unknown contract error";
+  const details = error as Error & {
+    shortMessage?: string;
+    details?: string;
+    metaMessages?: string[];
+    cause?: unknown;
+  };
+
+  const parts = [
+    details.shortMessage,
+    details.details,
+    details.message,
+    ...(details.metaMessages ?? []),
+  ].filter(
+    (value): value is string =>
+      typeof value === "string" && value.trim().length > 0,
+  );
+
+  return parts[0] ?? "Unknown contract error";
 }
 
 export async function sendRichReferralReward({
@@ -67,13 +84,21 @@ export async function sendRichReferralReward({
       functionName: "balanceOf",
       args: [marketingAccount.address],
     }),
-    bscClient.getBalance({ address: marketingAccount.address }),
+    bscClient.getBalance({
+      address: marketingAccount.address,
+    }),
   ]);
 
   console.log("========== MARKETING WALLET ==========");
   console.log("Address:", marketingAccount.address);
-  console.log("RIC balance:", formatUnits(ricBalance, RICH_TOKEN.decimals));
-  console.log("Reward required:", formatUnits(amountRaw, RICH_TOKEN.decimals));
+  console.log(
+    "RIC balance:",
+    formatUnits(ricBalance, RICH_TOKEN.decimals),
+  );
+  console.log(
+    "Reward required:",
+    formatUnits(amountRaw, RICH_TOKEN.decimals),
+  );
   console.log("BNB balance:", formatEther(bnbBalance));
 
   if (ricBalance < amountRaw) {
@@ -81,7 +106,10 @@ export async function sendRichReferralReward({
       `Insufficient marketing RIC. Balance ${formatUnits(
         ricBalance,
         RICH_TOKEN.decimals,
-      )}; required ${formatUnits(amountRaw, RICH_TOKEN.decimals)}`,
+      )}; required ${formatUnits(
+        amountRaw,
+        RICH_TOKEN.decimals,
+      )}`,
     );
   }
 
@@ -90,15 +118,24 @@ export async function sendRichReferralReward({
   }
 
   try {
-    const { request } = await bscClient.simulateContract({
-      account: marketingAccount,
+    /*
+     * Do not call simulateContract here.
+     *
+     * Some BSC RPC providers return "Missing or invalid parameters"
+     * for eth_call simulations even when the same signed transaction
+     * is accepted normally. The payout previously worked through a
+     * direct write, so we broadcast it and verify the mined receipt.
+     */
+    const hash = await marketingWalletClient.writeContract({
       address: RICH_TOKEN.address,
       abi: erc20Abi,
       functionName: "transfer",
       args: [to, amountRaw],
+      account: marketingAccount,
+      chain: bsc,
     });
 
-    const hash = await marketingWalletClient.writeContract(request);
+    console.log("Referral payout submitted:", hash);
 
     if (onSubmitted) {
       await onSubmitted(hash);
@@ -111,20 +148,33 @@ export async function sendRichReferralReward({
     });
 
     if (receipt.status !== "success") {
-      throw new Error(`Referral payout reverted: ${hash}`);
+      throw new Error(
+        `Referral payout transaction reverted: ${hash}`,
+      );
     }
 
-    return { hash, blockNumber: receipt.blockNumber };
+    console.log("Referral payout confirmed:", hash);
+
+    return {
+      hash,
+      blockNumber: receipt.blockNumber,
+    };
   } catch (error: unknown) {
-    const message = contractErrorMessage(error);
+    const message = getDetailedErrorMessage(error);
 
     console.error("========== REFERRAL PAYOUT ERROR ==========");
     console.error("Marketing wallet:", marketingAccount.address);
     console.error("Recipient:", to);
-    console.error("Amount:", formatUnits(amountRaw, RICH_TOKEN.decimals), "RIC");
+    console.error(
+      "Amount:",
+      formatUnits(amountRaw, RICH_TOKEN.decimals),
+      "RIC",
+    );
     console.error("Reason:", message);
     console.dir(error, { depth: null });
 
-    throw new Error(`Referral payout failed: ${message}`, { cause: error });
+    throw new Error(`Referral payout failed: ${message}`, {
+      cause: error,
+    });
   }
 }
